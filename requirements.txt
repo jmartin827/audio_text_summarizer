@@ -1,2 +1,10 @@
 spacy~=3.5.0
-git+https://github.com/openai/whisper.git
+
+# If running locally use this to install the proper pip package:
+# git+https://github.com/openai/whisper.git
+# python -m spacy download en_core_web_sm
+fastapi~=0.92.0
+uvicorn~=0.20.0
+pydantic~=1.10.5
+python-multipart
+python-multipart

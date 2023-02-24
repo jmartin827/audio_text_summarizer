@@ -2,7 +2,7 @@ import logging
 import time
 from heapq import nlargest
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
 import spacy
 import whisper
@@ -55,6 +55,12 @@ def get_summary(text_in: str, ratio: float = 0.3, max_tokens: int = 10,
 
     # Set select length based off of ratio, min, and max tokens
     select_length = int(len(sentence_tokens) * ratio)
+    # TODO raise exception if select length not at least 1
+
+    if select_length <= 0:
+        logging.warning(f'select_length non positive number {select_length}')
+        return ['Error: Unable to process due to short recording or too much summarization']
+
     if min_tokens <= select_length >= max_tokens:
         select_length = max_tokens
         logging.info(f'Token select length greater than {max_tokens}--setting it maximum')
