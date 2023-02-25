@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from heapq import nlargest
 from pathlib import Path
@@ -7,6 +8,8 @@ from typing import List, Any
 import spacy
 import whisper
 from spacy.lang.en.stop_words import STOP_WORDS
+
+logging.basicConfig(level='INFO')
 
 
 def get_summary(text_in: str, ratio: float = 0.3, max_tokens: int = 10,
@@ -82,6 +85,8 @@ def transcribe_audio(audio_file: Path) -> str:
     # TODO get audio sample length for logging info
 
     logging.info(f'Processing audio file: {audio_file}')
+    logging.info(f'Current CWD for transcribe_audio {os.getcwd()}')
+
     start = time.time()
 
     # Load model and transcribe audio

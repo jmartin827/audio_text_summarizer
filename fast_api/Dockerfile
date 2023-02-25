@@ -1,8 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.9-slim-buster
-
-# Create venv
-#RUN python -m venv /opt/venv
+FROM python:3.10.0-slim-buster
 
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
@@ -25,7 +22,7 @@ RUN apt-get install -y ffmpeg
 RUN python -m pip install git+https://github.com/openai/whisper.git
 
 # Set the working directory to /app
-WORKDIR /app
+WORKDIR ../app
 
 # Copy the current directory contents into the container at /app
 COPY . /app

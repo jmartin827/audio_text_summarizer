@@ -1,0 +1,3 @@
+services: 
+  fast_api:
+    build: fast_api/app
