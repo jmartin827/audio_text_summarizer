@@ -1,3 +1,41 @@
-services: 
-  fast_api:
-    build: fast_api/app
+version: '3'
+
+services:
+  redis:
+    image: redis:latest
+    networks:
+      - internal_network
+
+  celery-worker:  # TODO set commands here instead.
+    build:
+      context: celery_worker/
+    volumes:
+      - shared-volume:/app/input
+    networks:
+      - internal_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1000M
+        reservations:
+          cpus: '0.1'
+          memory: 300M
+    depends_on:
+      - redis
+  fast-api:
+    build:
+      context: fast_api/
+    ports:
+      - "8008:8000"
+    volumes:
+      - shared-volume:/app/input
+    networks:
+      - internal_network
+    depends_on:
+      -   celery-worker
+
+volumes:
+  shared-volume:
+networks:
+  internal_network:

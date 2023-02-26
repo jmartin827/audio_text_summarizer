@@ -1,8 +1,5 @@
 import logging
-
 from fastapi import FastAPI
-
-# TODO break out these imports separate file within routes
 from app.routes.transcribe_audio_summarize import router
 
 app = FastAPI()

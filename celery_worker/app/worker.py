@@ -18,24 +18,20 @@ def get_celery_setup() -> celery.Celery:
     TODO consider storing the info on Redis DB and just reference to the UUID
     """
     celery_out = Celery(
-        'app_name',
-        broker="redis://127.0.0.1:6379/0",
-        backend="redis://127.0.0.1:6379/0",
+        task_serializer="pickle",
+        result_serializer="pickle",
+        event_serializer="pickle",  # TODO change back to json is not needed
+        accept_content=["application/json", "application/x-python-serialize"],
+        result_accept_content=["application/json", "application/x-python-serialize"],
+        broker_url="redis://redis:6379/0",
+        backend_url="redis://redis:6379/0",
+        celery_imports="tasks.process_file"
     )
-
-    CELERY_ACCEPT_CONTENT = ['pickle']
-    CELERY_IMPORTS = [
-        'app_name.tasks',
-    ]
-
-    # Go with pickling instead of JSON serialization so Pydantic models supported
-    class CeleryConfig:
-        task_serializer = "pickle"
-        result_serializer = "pickle"
-        event_serializer = "json"
-        accept_content = ["application/json", "application/x-python-serialize"]
-        result_accept_content = ["application/json", "application/x-python-serialize"]
-
-    celery_out.config_from_object(CeleryConfig)
+    # celery_out.config_from_object(CeleryConfig())
 
     return celery_out
+
+
+if __name__ == "__main__":
+    worker = get_celery_setup().Worker()
+    worker.start()

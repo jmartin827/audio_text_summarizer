@@ -1,0 +1,4 @@
+celery
+Redis
+pydantic
+spacy~=3.5.0
