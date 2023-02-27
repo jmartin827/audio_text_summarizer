@@ -1,44 +1,39 @@
 import logging
+import os
 import uuid
+from typing import Dict
 
 import aiofiles
 import celery
 from fastapi import APIRouter, HTTPException, Form
 from fastapi import File, UploadFile
 
+from app.utils import logging_setup, get_redis_client
+
 router = APIRouter()
-logging.basicConfig(level='INFO')
+
+logging_setup()
 
 
 def get_celery_setup() -> celery.Celery:
     """Sets up celery as it is sensitive to import configuration.
-    TODO verify everything and cleanup
-    TODO consider storing the info on Redis DB and just reference to the UUID
     """
-    # TODO set the address as a venv instead and see why redis works this way for url
+    celery_out = celery.Celery()
 
-    celery_out = celery.Celery(
-        'project',
-    )
-
-    # Go with pickling instead of JSON serialization so Pydantic models supported
     class CeleryConfig:
-        task_serializer = "json"
-        result_serializer = "json"
-        event_serializer = "json"
-        accept_content = ["application/json", "application/x-python-serialize"]
-        result_accept_content = ["application/json", "application/x-python-serialize"]
-        broker_url = "redis://redis:6379/0",
-        backend_url = "redis://redis:6379/0",
-        celery_imports = "tasks.process_file"
+        broker_url = os.environ.get('CELERY_BROKER_URL'),
+        backend_url = os.environ.get('CELERY_BACKEND_URL'),
+        celery_imports = os.environ.get('CELERY_IMPORTS'),
 
     celery_out.config_from_object(CeleryConfig())
-
     return celery_out
 
 
 @router.post('/process')
-async def process(in_file: UploadFile = File(...), summary_ratio: float = Form(...)) -> str:
+async def process(in_file: UploadFile = File(...), summary_ratio: float = Form(...)) -> Dict:
+    """Accepts a file upload, verifies inputs, and adds task to Celery que
+    """
+
     if in_file.content_type not in ['audio/flac', 'audio/wav', 'audio/mp3']:
         raise HTTPException(400, detail="Invalid document type")
 
@@ -47,7 +42,7 @@ async def process(in_file: UploadFile = File(...), summary_ratio: float = Form(.
         raise HTTPException(400, detail="Summary Ratio must be between 1 and 0.01!")
 
     task_uuid = uuid.uuid1()
-    # TODO validate this against a mode;. Note models cannot be easily used with Celery--validate here for now.
+    # TODO validate this against a model. Note models cannot be easily used with Celery--validate here for now.
     file_info_out = (task_uuid, in_file.filename, summary_ratio)
 
     async with aiofiles.open(f'app/input/{task_uuid}', 'wb') as out_file:
@@ -60,7 +55,21 @@ async def process(in_file: UploadFile = File(...), summary_ratio: float = Form(.
 
     process_file = app.signature('tasks.process_file')
 
-    # TODO have this written to a DB and have another endpoint pull the result/status
-    result = process_file.delay(audio_task_in=file_info_out)
+    # This Celery task will continue in the background
+    process_file.delay(audio_task_in=file_info_out)
 
-    return 'File Received. Processing File'
+    return {'Processing': task_uuid}
+
+
+@router.get('/result')
+async def get_result(task_uuid: str):
+    # TODO ensure the input cannot be used maliciously against redis
+    client = get_redis_client()
+    result = client.get(task_uuid)
+
+    if result:
+        logging.info(f'Redis Value for the UUID:{result}')
+        return result
+
+    raise HTTPException(400, detail="UUID invalid")
+

@@ -5,10 +5,19 @@ services:
     image: redis:latest
     networks:
       - internal_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.02'
+          memory: 64M
+        reservations:
+          cpus: '0.01'
+          memory: 32M
 
   celery-worker:  # TODO set commands here instead.
     build:
       context: celery_worker/
+    env_file: .env.celery_example
     volumes:
       - shared-volume:/app/input
     networks:
@@ -16,22 +25,52 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: '1.50'
           memory: 1000M
         reservations:
-          cpus: '0.1'
+          cpus: '1'
           memory: 300M
     depends_on:
       - redis
+
+  flower:
+    image: mher/flower
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - FLOWER_PORT=8888
+    ports:
+      - "8888:8888"
+    networks:
+      - internal_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.05'
+          memory: 128M
+        reservations:
+          cpus: '0.02'
+          memory: 64M
+    depends_on:
+      - celery-worker
+
   fast-api:
     build:
       context: fast_api/
+    env_file: .env.celery_example
     ports:
       - "8008:8000"
     volumes:
       - shared-volume:/app/input
     networks:
       - internal_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.4'
+          memory: 256M
+        reservations:
+          cpus: '0.10'
+          memory: 64M
     depends_on:
       -   celery-worker
 

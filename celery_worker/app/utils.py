@@ -1,14 +1,29 @@
 import logging
+import os
 import time
 from heapq import nlargest
 from pathlib import Path
 from typing import List
 
+import redis
 import spacy
 import whisper
 from spacy.lang.en.stop_words import STOP_WORDS
 
-logging.basicConfig(level='INFO')
+
+def logging_setup():
+    # Logging Setup
+    logging.basicConfig(
+        format='[%(asctime)s] %(levelname)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    )
+
+    # Set logging level
+    logging.getLogger().setLevel(logging.INFO)
+
+
+# Start logger
+logging_setup()
 
 
 def get_summary(text_in: str, ratio: float = 0.3, max_tokens: int = 10,
@@ -59,9 +74,9 @@ def get_summary(text_in: str, ratio: float = 0.3, max_tokens: int = 10,
     select_length = int(len(sentence_tokens) * ratio)
 
     if select_length <= 0:
-        logging.warning(f'select_length non positive number {select_length}')
         # TODO add in custom exceptions and handling.
-        return ['Error: Unable to process due to short recording or too much summarization']
+        logging.error('Error: Unable to process due to short recording or too much summarization')
+        return ['Audio recording or desired summarization ratio is insufficient. Unable to process file.']
 
     if min_tokens <= select_length >= max_tokens:
         select_length = max_tokens
@@ -96,3 +111,21 @@ def transcribe_audio(audio_file: Path) -> str:
     logging.info(f'Transcription time: {elapsed_time} seconds. Raw Transcription: {result["text"]}')
 
     return result["text"]
+
+
+def get_redis_client() -> redis.Redis:
+    """Initialize Redis client using env variables and check if DB 1 exists.
+    Will create DB 1 if it doesn't exist and DB 0 is used for Celery
+    """
+    # Centralize this function
+    db_num = int(os.environ.get('REDIS_DB'))
+    client = redis.Redis(host=os.environ.get('REDIS_HOST'),
+                         port=int(os.environ.get('REDIS_PORT')),
+                         db=db_num)
+
+    # TODO resolve bug as this isn't conditional and occurs each time.
+    if not client.exists(db_num):
+        client.execute_command('SELECT', db_num)
+        logging.info(f"Created Redis DB as required DB {int(os.environ.get('REDIS_DB'))} does not exist.")
+
+    return client

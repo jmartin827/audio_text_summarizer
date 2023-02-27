@@ -26,12 +26,17 @@ WORKDIR /
 # Copy the current directory contents into the container at /app
 COPY . /
 
-## Install any needed packages specified in requirements.txt
-#RUN pip install --no-cache-dir -r requirements.txt
-
 WORKDIR /app
 
-CMD ["celery", "--app", "tasks.process", "worker", "--pool", "threads", "--loglevel=info"]
+# TODO determine the best strategy for running Whisper.
+# threads prevents multiprocessing.
+# --pool=solo is likely a single task per worker--it appears faster overall.
+
+
+#CMD ["celery", "--app", "tasks.process", "worker", "--pool", "threads", "--loglevel=info"]
+
+# This appears to be 30% faster for larger files when running on M1 cpu
+CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info"]
 
 
 
