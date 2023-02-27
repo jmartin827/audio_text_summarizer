@@ -1,5 +1,7 @@
 import logging
+
 from fastapi import FastAPI
+
 from app.routes.transcribe_audio_summarize import router
 
 app = FastAPI()
@@ -14,4 +16,3 @@ if __name__ == "__main__":
     logging.basicConfig(level='INFO')
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

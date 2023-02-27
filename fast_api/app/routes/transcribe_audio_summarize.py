@@ -72,4 +72,3 @@ async def get_result(task_uuid: str):
         return result
 
     raise HTTPException(400, detail="UUID invalid")
-

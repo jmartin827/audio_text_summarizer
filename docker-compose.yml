@@ -14,7 +14,7 @@ services:
           cpus: '0.01'
           memory: 32M
 
-  celery-worker:  # TODO set commands here instead.
+  celery-worker: # TODO set commands here instead.
     build:
       context: celery_worker/
     env_file: .env.celery_example
@@ -72,7 +72,7 @@ services:
           cpus: '0.10'
           memory: 64M
     depends_on:
-      -   celery-worker
+      - celery-worker
 
 volumes:
   shared-volume:
