@@ -11,5 +11,3 @@ saved in a shared volume by Fast API.
 The final result--the summarized transcript is stored in Redis using the UUID as the 
 corresponding key. Fast API can be queried about the status of the job and once ready
 the final result is available.
-
-This is a work in progress which was done over the weekend and needs time to finish.
