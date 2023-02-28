@@ -6,7 +6,6 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY requirements.txt .
 
-#RUN #. /opt/venv/bin/activate
 RUN python -m pip install -r requirements.txt && \
     python -m spacy download en_core_web_sm && \
     python -m spacy link en_core_web_sm en

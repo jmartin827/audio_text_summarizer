@@ -42,7 +42,8 @@ async def process(in_file: UploadFile = File(...), summary_ratio: float = Form(.
         raise HTTPException(400, detail="Summary Ratio must be between 1 and 0.01!")
 
     task_uuid = uuid.uuid1()
-    # TODO validate this against a model. Note models cannot be easily used with Celery--validate here for now.
+    # TODO validate this against a model.
+    #   Note models cannot be easily used with Celery--validate here for now.
     file_info_out = (task_uuid, in_file.filename, summary_ratio)
 
     async with aiofiles.open(f'app/input/{task_uuid}', 'wb') as out_file:
@@ -71,4 +72,4 @@ async def get_result(task_uuid: str):
         logging.info(f'Redis Value for the UUID:{result}')
         return result
 
-    raise HTTPException(400, detail="UUID invalid")
+    raise HTTPException(400, detail="UUID invalid or task not yet queued")

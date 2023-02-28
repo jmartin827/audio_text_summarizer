@@ -2,7 +2,7 @@ fastapi~=0.92.0
 uvicorn~=0.20.0
 pydantic~=1.10.5
 python-multipart
-aiofiles
-celery
-redis
+aiofiles~=23.1.0
+celery~=5.2.7
+redis~=4.5.1
 

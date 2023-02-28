@@ -15,10 +15,14 @@ process = get_celery_setup()
 def process_file(audio_task_in: tuple[uuid.UUID, str, float]) -> str:
     """Passes file UUID to transcription function and result to summarization function.
 
-    Accepts a tuple:
+    Accepts a tuple using the following format:
     tuple[uuid.UUID, str(original filename), float(summarization ratio))
     """
     # TODO create verification model for both ends as Celery is not readily tolerant of Pydnatic models.
+
+    # Update Redis entry to in-progress
+    client = get_redis_client()
+    client.set(audio_task_in[0], 'In Progress...')
 
     file_path = Path(f'input/{audio_task_in[0]}')
 
@@ -33,9 +37,7 @@ def process_file(audio_task_in: tuple[uuid.UUID, str, float]) -> str:
     os.remove(file_path)
     logging.info(f'Cleaned up file {file_path}')
 
-    # TODO add a pending status to the value--so that if queried before finished user has status update.
-    # Put result into Redis
-    client = get_redis_client()
+    # Put final result into Redis
     client.set(audio_task_in[0], summary)
 
     return summary

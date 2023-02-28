@@ -75,7 +75,7 @@ def get_summary(text_in: str, ratio: float = 0.3, max_tokens: int = 10,
 
     if select_length <= 0:
         # TODO add in custom exceptions and handling.
-        logging.error('Error: Unable to process due to short recording or too much summarization')
+        logging.error('Error: Unable to process due too of short recording or too much summarization')
         return ['Audio recording or desired summarization ratio is insufficient. Unable to process file.']
 
     if min_tokens <= select_length >= max_tokens:
@@ -123,9 +123,7 @@ def get_redis_client() -> redis.Redis:
                          port=int(os.environ.get('REDIS_PORT')),
                          db=db_num)
 
-    # TODO resolve bug as this isn't conditional and occurs each time.
-    if not client.exists(db_num):
-        client.execute_command('SELECT', db_num)
-        logging.info(f"Created Redis DB as required DB {int(os.environ.get('REDIS_DB'))} does not exist.")
+    # Select index 1 for Redis DB
+    client.execute_command('SELECT', db_num)
 
     return client
