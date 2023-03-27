@@ -37,5 +37,7 @@ WORKDIR /app
 # This appears to be 30% faster for larger files when running on M1 cpu
 CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info"]
 
+# TODO test this as well:
+# CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info", "--concurrency=1"]
 
 

@@ -35,6 +35,7 @@ async def process(in_file: UploadFile = File(...), summary_ratio: float = Form(.
     """
 
     if in_file.content_type not in ['audio/flac', 'audio/wav', 'audio/mp3']:
+        logging.info(f'Incorrect format {in_file.content_type}')
         raise HTTPException(400, detail="Invalid document type")
 
     # Ensures summary ratio is reasonable

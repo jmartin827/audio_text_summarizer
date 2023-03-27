@@ -16,7 +16,7 @@ services:
 
   celery-worker: # TODO set commands here instead.
     build:
-      context: celery_worker/
+      context: celery_worker
     env_file: .env.celery_example
     volumes:
       - shared-volume:/app/input
@@ -53,12 +53,10 @@ services:
 
   fast-api:
     build:
-      context: fast_api/
+      context: fast_api
     env_file: .env.celery_example
     ports:
-      - "8008:8000"
-    volumes:
-      - shared-volume:/app/input
+      - "8008:8008"
     networks:
       - internal_network
     deploy:
@@ -69,6 +67,7 @@ services:
         reservations:
           cpus: '0.10'
           memory: 64M
+
     depends_on:
       - celery-worker
 
