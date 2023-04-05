@@ -12,6 +12,8 @@ def get_celery_setup() -> celery.Celery:
     return Celery()
 
 
+# TODO have whisper model pre-initialize or download
+
 if __name__ == "__main__":
     worker = get_celery_setup().Worker()
     worker.start()

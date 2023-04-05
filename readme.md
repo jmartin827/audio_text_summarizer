@@ -10,9 +10,10 @@ The file is saved in a shared volume by Fast API for later retrieval by the user
 The summarized transcript is stored in Redis using the UUID as the corresponding key. 
 Users can query Fast API about the job status and access the final result once it's available.
 
+Kubectl port forwarding enables React to access FastAPI for basic testing.
+
 ## Getting Started 
 These instructions will help you get this project running on a local machine.
-(Work in progress)
 
 ### Prerequisites
 - [Python 3.10](https://www.python.org/downloads/)
@@ -29,11 +30,14 @@ These instructions will help you get this project running on a local machine.
     ```
 3. Kubernetes:
     ```bash
-    kubectl start
+    minikube start
     kubectl create configmap app-configs --from-env-file=.env 
-    kubectl apply -k ./
+    cd kubernetes && kubectl apply -k ./
     ```
-   (Note this uses prebuilt images from dockerhub and does not build directly from the source in the repo)
+   Forward FastAPI port for React and local testing:
+    ```bash
+    kubectl port-forward deployment/fast-api 8000:8000
+    ``` 
 
 4. Docker-compose
     TODO finish this step
@@ -45,6 +49,7 @@ These instructions will help you get this project running on a local machine.
 - [Whisper](https://graphite.readthedocs.io/en/latest/whisper.html)
 - [spaCy](https://spacy.io/)
 - [Redis](https://redis.io/)
+- [React](https://react.dev/)
 
 ## Contributing
 
@@ -57,6 +62,9 @@ This is a work in progress--any feedback and suggestions are welcomed.
 This project can be run using either docker-compose or kubernetes.
 
 #### Random Notes
+
+Requires a significant amount of CPU if parsing 10+ minute audio file.
+This can be alleviated with 2 or more CPU cores given to the celery worker.
 
 Visit the FastAPI Swagger UI
 

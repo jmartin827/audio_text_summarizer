@@ -27,17 +27,10 @@ COPY . /
 
 WORKDIR /app
 
-# TODO determine the best strategy for running Whisper.
-# threads prevents multiprocessing.
-# --pool=solo is likely a single task per worker--it appears faster overall.
-
-
-#CMD ["celery", "--app", "tasks.process", "worker", "--pool", "threads", "--loglevel=info"]
-
 # This appears to be 30% faster for larger files when running on M1 cpu
-CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info"]
+#CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info"]
 
-# TODO test this as well:
-# CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info", "--concurrency=1"]
+# Appears to be the most stable:
+ CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info", "--concurrency=1"]
 
 

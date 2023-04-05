@@ -37,8 +37,9 @@ spec:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: /Users/turbo/shared-volume
+    path: /tmp/
 
 ---
 apiVersion: v1
@@ -102,17 +103,16 @@ spec:
     spec:
       containers:
         - name: celery-worker
-          image: dockerman2322/celery
-#          command:
+          image: dockerman2322/celery:v2
           envFrom:
             - configMapRef:
                 name: app-configs
           volumeMounts:
             - name: shared-volume
-              mountPath: /app/input
+              mountPath: /app/input  # TODO change this over so it's outside of the app folder
           resources:
             limits:
-              cpu: "1"
+              cpu: "2"
               memory: "1000Mi"
             requests:
               cpu: "1"
@@ -170,7 +170,7 @@ spec:
     spec:
       containers:
         - name: fast-api
-          image: dockerman2322/fast-api
+          image: dockerman2322/fast-api:v2  # TODO clearly define CORS once testing done
           envFrom:
             - configMapRef:
                 name: app-configs
