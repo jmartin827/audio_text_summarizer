@@ -1,12 +1,29 @@
 import logging
+import os
 import time
 from heapq import nlargest
 from pathlib import Path
 from typing import List
 
+import redis
 import spacy
 import whisper
 from spacy.lang.en.stop_words import STOP_WORDS
+
+
+def logging_setup():
+    # Logging Setup
+    logging.basicConfig(
+        format='[%(asctime)s] %(levelname)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    )
+
+    # Set logging level
+    logging.getLogger().setLevel(logging.INFO)
+
+
+# Start logger
+logging_setup()
 
 
 def get_summary(text_in: str, ratio: float = 0.3, max_tokens: int = 10,
@@ -55,9 +72,15 @@ def get_summary(text_in: str, ratio: float = 0.3, max_tokens: int = 10,
 
     # Set select length based off of ratio, min, and max tokens
     select_length = int(len(sentence_tokens) * ratio)
+
+    if select_length <= 0:
+        # TODO add in custom exceptions and handling.
+        logging.error('Error: Unable to process due too of short recording or too much summarization')
+        return ['Audio recording or desired summarization ratio is insufficient. Unable to process file.']
+
     if min_tokens <= select_length >= max_tokens:
         select_length = max_tokens
-        logging.info(f'Token select length greater than {max_tokens}--setting it maximum')
+        logging.info(f'Token select length greater than {max_tokens}--setting it maximum of {max_tokens}')
     else:
         logging.info(f'select_length already within range:{select_length}')
 
@@ -76,6 +99,7 @@ def transcribe_audio(audio_file: Path) -> str:
     # TODO get audio sample length for logging info
 
     logging.info(f'Processing audio file: {audio_file}')
+
     start = time.time()
 
     # Load model and transcribe audio
@@ -83,7 +107,23 @@ def transcribe_audio(audio_file: Path) -> str:
     result = model.transcribe(f'{audio_file}', fp16=False)
 
     elapsed = time.time()
-    elapsed_time = round((elapsed - start), 3)
+    elapsed_time = round((elapsed - start), 2)
     logging.info(f'Transcription time: {elapsed_time} seconds. Raw Transcription: {result["text"]}')
 
     return result["text"]
+
+
+def get_redis_client() -> redis.Redis:
+    """Initialize Redis client using env variables and check if DB 1 exists.
+    Will create DB 1 if it doesn't exist and DB 0 is used for Celery
+    """
+    # Centralize this function
+    db_num = int(os.environ.get('REDIS_DB'))
+    client = redis.Redis(host=os.environ.get('REDIS_HOST'),
+                         port=int(os.environ.get('REDIS_PORT')),
+                         db=db_num)
+
+    # Select index 1 for Redis DB
+    client.execute_command('SELECT', db_num)
+
+    return client
