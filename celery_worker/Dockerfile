@@ -19,18 +19,20 @@ RUN apt-get install -y ffmpeg
 # Install latest OpenAI whisper pip package
 RUN python -m pip install git+https://github.com/openai/whisper.git
 
+# VI and redis cli for testing/debug
+RUN apt-get install -y vim
+RUN apt-get install -y redis-server
+
 # Set the working directory to /app
 WORKDIR /
 
 # Copy the current directory contents into the container at /app
 COPY . /
-
 WORKDIR /app
 
-# This appears to be 30% faster for larger files when running on M1 cpu
-#CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info"]
-
-# Appears to be the most stable:
- CMD ["celery", "--app", "tasks.process", "worker", "--pool=solo", "--loglevel=info", "--concurrency=1"]
+# Appears to be the most stable as Whisper can't support multithread and handles multicore automatically
+# Disabling mingle as the initialization process can take some time
+# Will not start the worker until it detects Redis is online
+ENTRYPOINT sh -c 'until redis-cli -h redis -p 6379 ping; do sleep 4; done && celery --app tasks.process worker --pool=solo --loglevel=info --concurrency=1 --without-mingle'
 
 

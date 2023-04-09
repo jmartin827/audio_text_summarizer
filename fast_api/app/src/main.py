@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.routes.transcribe_audio_summarize import router
 
 app = FastAPI()
@@ -13,6 +14,7 @@ origins = [
     "*"
 ]
 
+# TODO specify requirements
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

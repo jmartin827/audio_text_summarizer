@@ -33,6 +33,7 @@ function App() {
         console.log('Sending POST request to server...');
         axios.post('http://127.0.0.1:8000/api/process', formData, {responseType: 'json'})
             .then(response => {
+                // TODO change back end so the Key in response is descriptive and usable here for all cases.
                 console.log('Received response from server:', response);
                 if (response.data.Processing) {
                     const uuid = response.data.Processing;
@@ -87,6 +88,7 @@ function App() {
                             style={{display: "none"}}
                             onChange={onFileChange}
                         />
+                        {/*TODO grey out the upload button when waiting on response and produce error msg if no resp*/}
                         <label htmlFor="contained-button-file">
                             <Button
                                 variant="contained"
@@ -120,7 +122,6 @@ function App() {
 
                 {/*Result and status info*/}
                 <Grid container spacing={1} justifyContent="center">
-
                     <Grid item xs={5}>
                         {uuid && (
                             <Typography variant="body1">
