@@ -5,12 +5,15 @@ along with a UUID that references the job status and provides access to the resu
 
 Fast API sends a task to Redis, which serves as a message broker,
 and a Celery worker retrieves the task from the queue using the UUID to identify the corresponding file.
-The file is saved in a shared volume by Fast API for later retrieval by the user.
+The file is saved in a shared volume by Fast API for later retrieval by Celery worker.
 
-The summarized transcript is stored in Redis using the UUID as the corresponding key.
+The summarized transcript is stored in Redis by the Celery worker using the UUID as the corresponding key.
 Users can query Fast API about the job status and access the final result once it's available.
 
-Kubectl port forwarding enables React to access FastAPI for basic testing.
+A ReactJS front end allows the user to upload a file, see the active job status, and the result once finished.
+
+There are some checks (postStart, readinessProbe, etc) within the K8 deployment to help ensure everything is running and that the Celery workers are fully initialized. 
+
 
 ## Getting Started
 
@@ -48,6 +51,13 @@ These instructions will help you get this project running on a local machine.
    ```bash
     ./docker-build-push.sh your-dockerhub-username
     ```
+5. React
+    Start the dev server
+    ```bash
+    npm install front_end/
+    npm start --prefix ./front_end
+    ```
+   Refer to front_end folder's README.md for additional details.
    
 ## Technologies Used
 
@@ -57,6 +67,8 @@ These instructions will help you get this project running on a local machine.
 - [spaCy](https://spacy.io/)
 - [Redis](https://redis.io/)
 - [React](https://react.dev/)
+- [Minikube](https://minikube.sigs.k8s.io/)
+- [Kubernetes](https://kubernetes.io/)
 
 ## Contributing
 
