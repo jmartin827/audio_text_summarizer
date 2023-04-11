@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: shared-volume
+  name: shared-file-input-pv
 spec:
   storageClassName: manual
   capacity:
@@ -16,7 +16,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: shared-pvc1
+  name: shared-file-input-pvc
 spec:
   storageClassName: manual
   accessModes:

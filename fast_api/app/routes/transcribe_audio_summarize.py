@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException, Form
 from fastapi import Request, File, UploadFile
 from starlette import status
 
-from app.utils import logging_setup, get_redis_client
+from app.utils import logging_setup, get_redis_client, check__limit_job_count
 
 router = APIRouter()
 
@@ -35,10 +35,14 @@ def get_celery_setup() -> celery.Celery:
 async def process(request: Request, in_file: UploadFile = File(...), summary_ratio: float = Form(...)) -> Dict:
     """Accepts a file upload, verifies inputs, and adds task to Celery que.
     Logs the IP address of the client.
-    #TODO add throttling on a per end point and middleware basis.
     """
-    client_host_ip = request.client.host
-    logging.info(f'Process file requested by: {client_host_ip}')
+
+    # Track number of jobs per single IP address to throttle use
+    client_host_ip = str(request.client.host)
+
+    # Set Job UUID
+    task_uuid = str(uuid.uuid1())
+    check__limit_job_count(ip_address=client_host_ip, job_uuid=task_uuid)
 
     if in_file.content_type not in ['audio/flac', 'audio/wav', 'audio/mp3']:
         logging.info(f'Incorrect format {in_file.content_type}')
@@ -48,9 +52,8 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
     if not 0.01 <= summary_ratio <= 1:
         raise HTTPException(400, detail="Summary Ratio must be between 1 and 0.01!")
 
-    task_uuid = str(uuid.uuid1())
     # TODO validate this against a model.
-    #   Note models cannot be easily used with Celery--validate here for now.
+    #   Note models cannot be easily used with Celery--validate here and worker side
 
     data = {
         'job_uuid': task_uuid,
@@ -63,9 +66,6 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
     }
     data_str = json.dumps(data)
 
-    # Set the output path one level above the app folder
-    # TODO refactor so input is well outside of this folder and compatible with K8s + running files locally
-
     async with aiofiles.open(f'../input/{task_uuid}', 'wb') as out_file:
         # Setting larger chunk size
         while content := await in_file.read(8000):
@@ -75,11 +75,9 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
     # Queue file processing task
     app = get_celery_setup()
 
-    process_file = app.signature('tasks.process_file')
-
-    logging.info(f'Sending Job to Celery Que: {data_str}')
-
     # This Celery task will continue in the background
+    logging.info(f'Sending Job to Celery Que: {data_str}')
+    process_file = app.signature('tasks.process_file')
     process_file.delay(audio_task_in=data_str)
 
     return {'Processing': task_uuid}
@@ -87,8 +85,7 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
 
 @router.get('/result')
 async def get_result(task_uuid: str):
-    # TODO ensure the input cannot be used maliciously against redis
-    client = get_redis_client()
+    client = get_redis_client(db_num=int(os.environ.get('REDIS_DB')))
     result = client.get(task_uuid)
 
     if result:

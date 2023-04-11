@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fastapi-celery
+  labels:
+    app: fastapi-celery-redis-flower
+  annotations:
+    description: Runs fast-api, celery works, redis, and flower.
+spec:
+  finalizers:
+  - kubernetes

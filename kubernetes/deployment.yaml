@@ -60,8 +60,7 @@ spec:
       containers:
         - name: celery-worker
           image: dockerman2322/celery:test
-          imagePullPolicy: IfNotPresent
-
+          imagePullPolicy: Always
           # Constantly checks that it can communicate with redis
           readinessProbe:
             exec:
@@ -101,7 +100,7 @@ spec:
             - configMapRef:
                 name: app-configs
           volumeMounts:
-            - name: shared-volume
+            - name: shared-file-input-pv
               mountPath: /input
           resources:
             limits:
@@ -111,9 +110,9 @@ spec:
               cpu: "1.25"
               memory: "1000Mi"
       volumes:
-        - name: shared-volume
+        - name: shared-file-input-pv
           persistentVolumeClaim:
-            claimName: shared-pvc1
+            claimName: shared-file-input-pvc
 
 ---
 apiVersion: apps/v1
@@ -165,12 +164,12 @@ spec:
       containers:
         - name: fast-api
           image: dockerman2322/fast-api:test  # TODO clearly define CORS once testing done
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: app-configs
           volumeMounts:
-            - name: shared-volume
+            - name: shared-file-input-pv
               mountPath: /input
           ports:
             - name: fast-api
@@ -180,8 +179,8 @@ spec:
               cpu: "0.125"
               memory: "512Mi"
             requests:
-              cpu: "0.075"
-              memory: "256Mi"
+              cpu: "0.100"
+              memory: "512Mi"
           readinessProbe:
             httpGet:
               path: /api/healthcheck
@@ -189,6 +188,6 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
       volumes:
-        - name: shared-volume
+        - name: shared-file-input-pv
           persistentVolumeClaim:
-            claimName: shared-pvc1
+            claimName: shared-file-input-pvc

@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: redis
+  annotations:
+    description: Redis DB service for Celery, Flower, and FastAPI
 spec:
   selector:
     app: redis
@@ -15,6 +17,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: fast-api-service
+  annotations:
+    description: FastAPI service for front end
 spec:
   type: NodePort
   selector:

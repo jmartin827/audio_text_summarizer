@@ -5,7 +5,7 @@ along with a UUID that references the job status and provides access to the resu
 
 Fast API sends a task to Redis, which serves as a message broker,
 and a Celery worker retrieves the task from the queue using the UUID to identify the corresponding file.
-The file is saved in a shared volume by Fast API for later retrieval by Celery worker.
+The file is saved in a shared volume with Fast API for later retrieval by Celery worker.
 
 The summarized transcript is stored in Redis by the Celery worker using the UUID as the corresponding key.
 Users can query Fast API about the job status and access the final result once it's available.
@@ -27,36 +27,42 @@ These instructions will help you get this project running on a local machine.
 ### Installing
 
 1. Clone the repository to your local machine:
-    ```bash
-    git clone https://github.com/<your-username>/audio_text_summarizer
-    ```
+   ```bash
+   git clone https://github.com/<your-username>/audio_text_summarizer
+   ```
 2. Navigate to the project directory:
-    ```bash
-    cd audio_text_summarizer
-    ```
+   ```bash
+   cd audio_text_summarizer
+   ```
 3. Kubernetes:
-    ```bash
-    minikube start
-    ```    
+   ```bash
+   minikube start
+   ```
    ```bash
     kubectl create configmap app-configs --from-env-file=.env 
     kubectl apply -k ./kubernetes
     ```
    Forward FastAPI port for React and local testing:
-    ```bash
-    kubectl port-forward deployment/fast-api 8000:8000
-    ```
+   ```bash
+   kubectl port-forward deployment/fast-api 8000:8000
+   ```
 4. Build/Push Changes
    If desired a simple script is provided which will push the updated docker images to a specified username
    ```bash
     ./docker-build-push.sh your-dockerhub-username
     ```
 5. React
-    Start the dev server
-    ```bash
-    npm install front_end/
-    npm start --prefix ./front_end
-    ```
+    Install Node dependencies
+   ```bash
+   cd front_end
+   npm install 
+   cd ../
+   ```
+   Start Dev Server    
+   ```bash
+   npm start --prefix ./front_end
+   ```
+
    Refer to front_end folder's README.md for additional details.
    
 ## Technologies Used
@@ -83,26 +89,18 @@ This project can be run using either docker-compose or kubernetes.
 #### Random Notes
 
 Requires a significant amount of CPU if parsing 10+ minute audio file.
-This can be alleviated with 2 or more CPU cores given to the celery worker.
+Requires 1 CPU core and 1GB of RAM per Celery Worker.
 
-Visit the FastAPI Swagger UI
+Visit the FastAPI Swagger UI for documentation and testing:
 
-minikube service fast-api-service --url
+localhost:8000/docs
 
-Check Flower Status (this or the other method):
-
+Check Flower Status:
+```bash
 kubectl port-forward deployment/flower 8888:8888
-
-http://localhost:8888/ --> Should show the dashboard for Flower.
-
-Alternatively you can use minikube to handle it:
-
-minikube service fast-api-service --url
-
+```
 Check the logs:
-(Useful if you wish to see what is happening on any of the services)
-
+```bash
 kubectl logs deployment/celery-worker -c celery-worker
+```
 
-Caveats:
-No password for Redis or other internal/external authentication.
