@@ -38,7 +38,7 @@ function App() {
                 if (response.data.Processing) {
                     const uuid = response.data.Processing;
                     setUuid(uuid);
-                    setStatus('Processing...');
+                    setStatus('Processing');
                     pollResult(uuid);
                 }
 
@@ -54,7 +54,7 @@ function App() {
             .then(response => {
                 console.log('Received response from server:', response);
                 //TODO refactor back and front end for better status checks
-                if (response.data !== 'In Progress...') {
+                if (response.data !== 'Processing') {
                     setStatus(response.data);
                 } else {
                     setTimeout(() => pollResult(uuid), 1000);

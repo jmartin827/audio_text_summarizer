@@ -3,7 +3,7 @@ import logging
 import os
 from pathlib import Path
 
-from utils import transcribe_audio, get_summary, logging_setup, get_redis_client
+from worker_utils import transcribe_audio, get_summary, logging_setup, get_redis_client
 from worker import get_celery_setup
 
 logging_setup()
@@ -12,20 +12,20 @@ process = get_celery_setup()
 
 
 @process.task
-def process_file(audio_task_in: str) -> str | None:  # TODO find better type hint for json
+def process_file(audio_task_in: dict) -> str | None:  # TODO find better type hint for json
     """Passes file UUID to transcription function and result to summarization function.
 
     """
-    # TODO create verification model against the json string once loaded back
+    # TODO create validation model against the dictionary audio_task_in
 
-    file_state = json.loads(audio_task_in)
-    logging.info(f'Received job info:{file_state}')
+    file_state = audio_task_in
+    logging.info(f'Received job info:{audio_task_in}')
 
     # Update Redis entry to in-progress
     client = get_redis_client(db_num=int(os.environ.get('REDIS_DB')))
 
     # Set entry and expire time of 5 minutes
-    client.setex(name=file_state['job_uuid'], time=300, value='In Progress...')
+    client.setex(name=file_state['job_uuid'], time=300, value='Processing')
     file_path = Path(f'../input/{file_state["job_uuid"]}')
 
     # Transcribe audio
@@ -39,6 +39,7 @@ def process_file(audio_task_in: str) -> str | None:  # TODO find better type hin
     # Convert to string for Redis
     summary = ' '.join(get_summary(text_in=transcription, ratio=file_state["ratio"]))
     percent = round((len(" ".join(summary)) / len(transcription)), 2) * 100
+    # TODO fix broken percent logging info
 
     # file_state
     file_state = {**file_state, 'summary': summary,

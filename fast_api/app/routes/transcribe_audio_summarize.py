@@ -44,7 +44,7 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
     task_uuid = str(uuid.uuid1())
     check__limit_job_count(ip_address=client_host_ip, job_uuid=task_uuid)
 
-    if in_file.content_type not in ['audio/flac', 'audio/wav', 'audio/mp3']:
+    if in_file.content_type not in ['audio/flac', 'audio/wav', 'audio/mp3', 'audio/mpeg']:
         logging.info(f'Incorrect format {in_file.content_type}')
         raise HTTPException(400, detail="Invalid document type")
 
@@ -64,7 +64,6 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
         'client_ip': client_host_ip,
         'status': 0,  # Not complete/False
     }
-    data_str = json.dumps(data)
 
     async with aiofiles.open(f'../input/{task_uuid}', 'wb') as out_file:
         # Setting larger chunk size
@@ -76,9 +75,9 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
     app = get_celery_setup()
 
     # This Celery task will continue in the background
-    logging.info(f'Sending Job to Celery Que: {data_str}')
+    logging.info(f'Sending Job to Celery Que: {data}')
     process_file = app.signature('tasks.process_file')
-    process_file.delay(audio_task_in=data_str)
+    process_file.delay(audio_task_in=data)
 
     return {'Processing': task_uuid}
 

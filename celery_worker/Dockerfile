@@ -23,12 +23,11 @@ RUN python -m pip install git+https://github.com/openai/whisper.git
 RUN apt-get install -y vim
 RUN apt-get install -y redis-server
 
-# Set the working directory to /app
-WORKDIR /
-
 # Copy the current directory contents into the container at /app
 COPY . /
-WORKDIR /app
+WORKDIR /worker
+
+# TODO remove root permissions for worker
 
 # Appears to be the most stable as Whisper can't support multithread and handles multicore automatically
 # Disabling mingle as the initialization process can take some time

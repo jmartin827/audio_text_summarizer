@@ -4,7 +4,8 @@ kind: Kustomization
 
 resources:
 #  - namespace.yaml TODO namespaces
-#  - configmap.yaml TODO dynamic configmap
+#  - TODO dynamic configmap
+  - configmap.yaml
   - volumes.yaml
   - deployment.yaml
 #  - ingress.yaml

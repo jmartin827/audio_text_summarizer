@@ -75,6 +75,7 @@ These instructions will help you get this project running on a local machine.
 - [React](https://react.dev/)
 - [Minikube](https://minikube.sigs.k8s.io/)
 - [Kubernetes](https://kubernetes.io/)
+- [Mozilla Common Voice](https://github.com/common-voice/common-voice)
 
 ## Contributing
 

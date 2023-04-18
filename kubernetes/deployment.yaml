@@ -20,13 +20,24 @@ spec:
             - name: redis
               containerPort: 6379
           # TODO decide on amount and type of probes
-          livenessProbe:
+          readinessProbe:
             exec:
               command:
                 - sh
                 - -c
                 - redis-cli ping | grep PONG
             initialDelaySeconds: 25
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli ping | grep PONG
+            initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
             successThreshold: 1
@@ -80,6 +91,18 @@ spec:
             timeoutSeconds: 15
             successThreshold: 1
             failureThreshold: 3
+          livenessProbe:
+            exec:
+              # Will look for workers and a worker will result in "celery-worker" being shown.
+              command:
+                - sh
+                - -c
+                - "celery status | grep -q celery-worker"
+            initialDelaySeconds: 60
+            periodSeconds: 180
+            timeoutSeconds: 15
+            successThreshold: 1
+            failureThreshold: 2
           lifecycle:
             # Initializes the container with Whisper
             postStart:
@@ -114,7 +137,7 @@ spec:
           persistentVolumeClaim:
             claimName: shared-file-input-pvc
 
----
+--- # TODO get flower api working for info throughout manifest
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -145,6 +168,18 @@ spec:
             requests:
               cpu: "0.05"
               memory: "64Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8888
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:  # TODO enable flower API and use elsewhere for worker status
+            httpGet:
+              path: /
+              port: 8888
+            initialDelaySeconds: 10
+            periodSeconds: 20
 
 ---
 apiVersion: apps/v1
@@ -185,8 +220,20 @@ spec:
             httpGet:
               path: /api/healthcheck
               port: 8000
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
       volumes:
         - name: shared-file-input-pv
           persistentVolumeClaim:
