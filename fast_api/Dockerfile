@@ -10,6 +10,9 @@ COPY requirements.txt .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+# VI for basic debugging
+RUN apt-get update && apt-get install -y vim
+
 # Set the working directory to /app
 WORKDIR /
 

@@ -113,12 +113,12 @@ def transcribe_audio(audio_file: Path) -> str:
     return result["text"]
 
 
-def get_redis_client() -> redis.Redis:
-    """Initialize Redis client using env variables and check if DB 1 exists.
-    Will create DB 1 if it doesn't exist and DB 0 is used for Celery
+def get_redis_client(db_num: int) -> redis.Redis:
+    """Initialize Redis client.
+    DB 0 is Celery
+    DB 1 is task status
+    DB 2 is for IP rate limiting
     """
-    # Centralize this function
-    db_num = int(os.environ.get('REDIS_DB'))
     client = redis.Redis(host=os.environ.get('REDIS_HOST'),
                          port=int(os.environ.get('REDIS_PORT')),
                          db=db_num)

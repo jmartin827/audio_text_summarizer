@@ -1,7 +1,7 @@
 import celery
 from celery import Celery
 
-from utils import logging_setup
+from worker_utils import logging_setup
 
 logging_setup()
 

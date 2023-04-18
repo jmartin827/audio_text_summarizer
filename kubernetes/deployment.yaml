@@ -1,60 +1,3 @@
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: redis
-spec:
-  selector:
-    app: redis
-  ports:
-    - name: redis
-      port: 6379
-  clusterIP: None
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: fast-api-service
-spec:
-  type: NodePort
-  selector:
-    app: fast-api
-  ports:
-    - name: http
-      port: 80
-      targetPort: 8000
-      nodePort: 32767
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: shared-volume
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  hostPath:
-    path: /tmp/
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: shared-pvc1
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -72,19 +15,43 @@ spec:
       containers:
         - name: redis
           image: redis:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - name: redis
               containerPort: 6379
+          # TODO decide on amount and type of probes
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli ping | grep PONG
+            initialDelaySeconds: 25
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli ping | grep PONG
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
           envFrom:
             - configMapRef:
                 name: app-configs
           resources:
             limits:
-              cpu: "0.02"
-              memory: "64Mi"
+              cpu: "0.1"
+              memory: "128Mi"
             requests:
-              cpu: "0.01"
-              memory: "32Mi"
+              cpu: "0.05"
+              memory: "64Mi"
 
 ---
 apiVersion: apps/v1
@@ -95,7 +62,7 @@ spec:
   selector:
     matchLabels:
       app: celery-worker
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
@@ -103,26 +70,74 @@ spec:
     spec:
       containers:
         - name: celery-worker
-          image: dockerman2322/celery:v2
+          image: dockerman2322/celery:test
+          imagePullPolicy: Always
+          # Constantly checks that it can communicate with redis
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - >
+                  if redis-cli -h redis ping | grep -q PONG; then
+                    echo "ready"
+                    exit 0
+                  else
+                    echo "not ready"
+                    exit 1
+                  fi
+            initialDelaySeconds: 40
+            periodSeconds: 60
+            timeoutSeconds: 15
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              # Will look for workers and a worker will result in "celery-worker" being shown.
+              command:
+                - sh
+                - -c
+                - "celery status | grep -q celery-worker"
+            initialDelaySeconds: 60
+            periodSeconds: 180
+            timeoutSeconds: 15
+            successThreshold: 1
+            failureThreshold: 2
+          lifecycle:
+            # Initializes the container with Whisper
+            postStart:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - |
+                    python3 initialize.py
+                    if [ $? -eq 0 ]; then
+                      echo "Validation successful"
+                    else
+                      echo "Validation failed, exiting"
+                      exit 1
+                    fi
+
           envFrom:
             - configMapRef:
                 name: app-configs
           volumeMounts:
-            - name: shared-volume
-              mountPath: /app/input  # TODO change this over so it's outside of the app folder
+            - name: shared-file-input-pv
+              mountPath: /input
           resources:
             limits:
-              cpu: "2"
-              memory: "1000Mi"
+              cpu: "1.5"
+              memory: "1200Mi"
             requests:
-              cpu: "1"
-              memory: "300Mi"
+              cpu: "1.25"
+              memory: "1000Mi"
       volumes:
-        - name: shared-volume
+        - name: shared-file-input-pv
           persistentVolumeClaim:
-            claimName: shared-pvc1
+            claimName: shared-file-input-pvc
 
----
+--- # TODO get flower api working for info throughout manifest
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -140,6 +155,7 @@ spec:
       containers:
         - name: flower
           image: mher/flower
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: app-configs
@@ -147,11 +163,23 @@ spec:
             - containerPort: 8888
           resources:
             limits:
-              cpu: "0.05"
+              cpu: "0.075"
               memory: "128Mi"
             requests:
-              cpu: "0.02"
+              cpu: "0.05"
               memory: "64Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8888
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:  # TODO enable flower API and use elsewhere for worker status
+            httpGet:
+              path: /
+              port: 8888
+            initialDelaySeconds: 10
+            periodSeconds: 20
 
 ---
 apiVersion: apps/v1
@@ -170,17 +198,43 @@ spec:
     spec:
       containers:
         - name: fast-api
-          image: dockerman2322/fast-api:v2  # TODO clearly define CORS once testing done
+          image: dockerman2322/fast-api:test  # TODO clearly define CORS once testing done
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: app-configs
           volumeMounts:
-            - name: shared-volume
-              mountPath: /app/input
+            - name: shared-file-input-pv
+              mountPath: /input
           ports:
             - name: fast-api
               containerPort: 8000
+          resources:
+            limits:
+              cpu: "0.125"
+              memory: "512Mi"
+            requests:
+              cpu: "0.100"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
       volumes:
-        - name: shared-volume
+        - name: shared-file-input-pv
           persistentVolumeClaim:
-            claimName: shared-pvc1
+            claimName: shared-file-input-pvc

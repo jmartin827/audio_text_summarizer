@@ -6,13 +6,13 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: test.com # replace with your actual domain name
-    http:
-      paths:
-      - path: /fast-api
-        pathType: Prefix
-        backend:
-          service:
-            name: fast-api-service
-            port:
-              name: http
+    - host: test.com # replace with your actual domain name
+      http:
+        paths:
+          - path: /fast-api
+            pathType: Prefix
+            backend:
+              service:
+                name: fast-api-service
+                port:
+                  name: http
