@@ -38,13 +38,45 @@ These instructions will help you get this project running on a local machine.
    ```bash
    minikube start
    ```
+   **Optional for proxy:**
    ```bash
-    kubectl create configmap app-configs --from-env-file=.env 
+   minikube addons enable ingress
+   minikube addons enable ingress-dns
+   ```
+
+   **Required:**
+   ```bash
+    # Comment out configmap in kustomize file and create dynamically from .env if desired:
+    # kubectl create configmap app-configs --from-env-file=.env 
     kubectl apply -k ./kubernetes
     ```
+   
+   **No proxy**
+
    Forward FastAPI port for React and local testing:
    ```bash
    kubectl port-forward deployment/fast-api 8000:8000
+   ```
+   
+   **Optional for proxy:**
+
+   --> Update ingress.yaml with desired domain name.
+
+   macOS:
+
+   Add entry within /etc/hosts: 
+   127.0.0.1 example.com
+
+   Others:
+
+   See if above works and if not use IP address supplied below:
+   ```bash
+   kubectl get ingress
+   ```
+   
+   Start tunnel:
+   ```bash
+   minikube tunnel
    ```
 4. Build/Push Changes
    If desired a simple script is provided which will push the updated docker images to a specified username
@@ -58,6 +90,12 @@ These instructions will help you get this project running on a local machine.
    npm install 
    cd ../
    ```
+   Optional for proxy:
+   
+   Set variable within .env.development
+   http://127.0.0.1:8000 -> desired domain being proxied
+
+
    Start Dev Server    
    ```bash
    npm start --prefix ./front_end
@@ -85,7 +123,7 @@ This is a work in progress--any feedback and suggestions are welcomed.
 
 ### Notes and basic troubleshooting
 
-This project can be run using either docker-compose or kubernetes.
+This project can be run using kubernetes VIA minikube or with some effort starting each container individually.
 
 #### Random Notes
 

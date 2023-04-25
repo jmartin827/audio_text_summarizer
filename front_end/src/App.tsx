@@ -5,9 +5,10 @@ import './App.css';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {Box, Button, Grid, Link, TextField, Typography} from '@mui/material';
 
+// TODO implement .env to set url target
 
 function App() {
-
+    const base_url : string = process.env.REACT_APP_API_BASE
     const [file, setFile] = useState(null);
     const [uuid, setUuid] = useState(null);
     const [status, setStatus] = useState(null);
@@ -30,8 +31,9 @@ function App() {
         // @ts-ignore
         formData.append('summary_ratio', ratio);
 
-        console.log('Sending POST request to server...');
-        axios.post('http://127.0.0.1:8000/api/process', formData, {responseType: 'json'})
+        const process_url : string = base_url + '/api/process'
+        console.log('POST to ' + process_url)
+        axios.post(process_url, formData, {responseType: 'json'})
             .then(response => {
                 // TODO change back end so the Key in response is descriptive and usable here for all cases.
                 console.log('Received response from server:', response);
@@ -49,8 +51,9 @@ function App() {
     };
 
     const pollResult = (uuid) => {
-        console.log('Sending GET request to server...');
-        axios.get(`http://127.0.0.1:8000/api/result?task_uuid=${uuid}`)
+        const poll_url : string = base_url + '/api/result?task_uuid=' + uuid
+        console.log('POST to ' + poll_url)
+        axios.get(poll_url)
             .then(response => {
                 console.log('Received response from server:', response);
                 //TODO refactor back and front end for better status checks

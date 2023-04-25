@@ -97,4 +97,3 @@ async def get_result(task_uuid: str):
 @router.get('/healthcheck', status_code=status.HTTP_200_OK)
 def perform_healthcheck():
     return {'healthcheck': 'OK'}
-

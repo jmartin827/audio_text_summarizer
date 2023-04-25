@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from requests import Request
 
 from app.routes.transcribe_audio_summarize import router
 
@@ -14,7 +15,18 @@ origins = [
     "*"
 ]
 
-# TODO specify requirements
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """
+    Log all incoming requests for debugging
+    """
+    logging.debug(f"{request.method} {request.url}")
+    response = await call_next(request)
+    return response
+
+
+# TODO specify requirements and add domain specific .env variables here
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

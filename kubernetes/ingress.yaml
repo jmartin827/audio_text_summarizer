@@ -1,18 +1,30 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: app-ingress
+  name: fast-api-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # Works. TODO refactor and add multi-domain capability
+    nginx.ingress.kubernetes.io/rewrite-target: $request_uri
+#    nginx.ingress.kubernetes.io/rewrite-target: $1$2
+
 spec:
   rules:
-    - host: test.com # replace with your actual domain name
+    - host: josh-martin.dev
       http:
         paths:
-          - path: /fast-api
+          - path: /api(/.*|$)
             pathType: Prefix
             backend:
               service:
                 name: fast-api-service
                 port:
-                  name: http
+                      name: http
+          # TODO secure docs
+          - path: /docs(/.*|$)
+            pathType: Prefix
+            backend:
+              service:
+                name: fast-api-service
+                port:
+                      name: http
