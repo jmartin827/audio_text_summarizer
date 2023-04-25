@@ -69,7 +69,7 @@ These instructions will help you get this project running on a local machine.
 
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Celery](https://docs.celeryproject.org/en/stable/)
-- [Whisper](https://graphite.readthedocs.io/en/latest/whisper.html)
+- [Whisper](https://github.com/openai/whisper)
 - [spaCy](https://spacy.io/)
 - [Redis](https://redis.io/)
 - [React](https://react.dev/)
