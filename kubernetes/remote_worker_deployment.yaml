@@ -1,0 +1,60 @@
+# Local deployment which runs within the cluster.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker-remote
+spec:
+  selector:
+    matchLabels:
+      app: celery-worker
+  replicas: 1
+  strategy:
+    type: Recreate  # For smaller clusters with limited resources
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+    spec:
+      containers:
+        - name: celery-worker
+          image: dockerman2322/celery-remote:test
+          imagePullPolicy: Always
+          # Constantly checks that it can communicate with redis
+          # Update if running locally or no K8 redis service used
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - >
+                  if redis-cli -h redis ping | grep -q PONG; then
+                    echo "ready"
+                    exit 0
+                  else
+                    echo "not ready"
+                    exit 1
+                  fi
+            initialDelaySeconds: 40
+            periodSeconds: 60
+            timeoutSeconds: 15
+            successThreshold: 1
+            failureThreshold: 3
+          envFrom:
+            - configMapRef:
+                name: app-configs
+            - secretRef:
+                name: my-secret
+          volumeMounts:
+            - name: shared-file-input-pv
+              mountPath: /input
+          resources:  # TODO benchmark and adjust resources
+            limits:
+              cpu: "0.5"
+              memory: "900Mi"
+            requests:
+              cpu: "0.4"
+              memory: "900Mi"
+      volumes:
+        - name: shared-file-input-pv
+          persistentVolumeClaim:
+            claimName: shared-file-input-pvc

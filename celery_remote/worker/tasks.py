@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from worker import get_celery_setup
-from worker_utils import transcribe_audio, get_summary, logging_setup, get_redis_client
+from worker_utils import query_inference_endpoint, get_summary, logging_setup, get_redis_client
 
 logging_setup()
 
@@ -14,6 +14,7 @@ process = get_celery_setup()
 @process.task
 def process_file(audio_task_in: dict) -> str | None:  # TODO find better type hint for json
     """Passes file UUID to transcription function and result to summarization function.
+    Uses inference endpoint for transcribing audio and Spacy locally to summarize.
 
     """
     # TODO create validation model against the dictionary audio_task_in
@@ -28,13 +29,8 @@ def process_file(audio_task_in: dict) -> str | None:  # TODO find better type hi
     client.setex(name=file_state['job_uuid'], time=300, value='Processing')
     file_path = Path(f'../input/{file_state["job_uuid"]}')
 
-    # Transcribe audio
-    try:
-        transcription = transcribe_audio(audio_file=file_path)
-    except RuntimeError as e:
-        logging.error(f'File is either empty or unable to process {e}')
-        client.setex(name=file_state['job_uuid'], time=15, value='Error')
-        return None
+    # Transcribe audio using an Inference Endpoint
+    transcription = query_inference_endpoint(filename=file_path)
 
     # Convert to string for Redis
     summary = ' '.join(get_summary(text_in=transcription, ratio=file_state["ratio"]))

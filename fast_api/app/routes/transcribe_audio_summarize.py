@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import uuid
@@ -41,8 +40,10 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
     client_host_ip = str(request.client.host)
 
     # Set Job UUID
+    # TODO limit upload size
+
     task_uuid = str(uuid.uuid1())
-    check__limit_job_count(ip_address=client_host_ip, job_uuid=task_uuid)
+    check__limit_job_count(ip_address=client_host_ip, job_uuid=task_uuid, limit=4)
 
     if in_file.content_type not in ['audio/flac', 'audio/wav', 'audio/mp3', 'audio/mpeg']:
         logging.info(f'Incorrect format {in_file.content_type}')

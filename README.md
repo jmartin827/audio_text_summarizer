@@ -46,6 +46,10 @@ These instructions will help you get this project running on a local machine.
 
    **Required:**
    ```bash
+    # Load secrets
+    kubectl create secret generic my-secret --from-env-file=.env.secrets
+   ```
+   ```bash
     # Comment out configmap in kustomize file and create dynamically from .env if desired:
     # kubectl create configmap app-configs --from-env-file=.env 
     kubectl apply -k ./kubernetes

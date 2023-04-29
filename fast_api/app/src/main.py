@@ -26,7 +26,9 @@ async def log_requests(request: Request, call_next):
     return response
 
 
-# TODO specify requirements and add domain specific .env variables here
+# TODO throttle all endpoints overall to limit DDOS
+# TODO Cookies
+# TODO specify requirements and add domain specific .env variables here for CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
