@@ -18,9 +18,6 @@ RUN apt-get update && apt-get install -y \
     redis-server\
     && rm -rf /var/lib/apt/lists/*
 
-# Install latest OpenAI whisper pip package
-RUN python -m pip install git+https://github.com/openai/whisper.git
-
 # Copy the current directory contents into the container at /app
 COPY . /
 WORKDIR /worker

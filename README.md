@@ -23,6 +23,10 @@ These instructions will help you get this project running on a local machine.
 
 - [Python 3.10](https://www.python.org/downloads/)
 - [pip](https://pip.pypa.io/en/stable/installation/)
+- [minikube](https://minikube.sigs.k8s.io/docs/)
+- [Node.js](https://nodejs.org/en)
+- [npm](https://www.npmjs.com/)
+- [docker](https://www.docker.com/)
 
 ### Installing
 
@@ -38,7 +42,7 @@ These instructions will help you get this project running on a local machine.
    ```bash
    minikube start
    ```
-   **Optional for proxy:**
+   **Optional for local test proxy:**
    ```bash
    minikube addons enable ingress
    minikube addons enable ingress-dns
@@ -64,7 +68,7 @@ These instructions will help you get this project running on a local machine.
    
    **Optional for proxy:**
 
-   --> Update ingress.yaml with desired domain name.
+   --> Update local_test_ingress with desired domain name.
 
    macOS:
 

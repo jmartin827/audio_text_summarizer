@@ -1,8 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: fast-api-ingress
+  name: audio-summarizer-ingress
   annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
     # Works. TODO refactor and add multi-domain capability
     nginx.ingress.kubernetes.io/rewrite-target: $request_uri
@@ -20,11 +22,10 @@ spec:
                 name: fast-api-service
                 port:
                       name: http
-          # TODO secure docs
-          - path: /docs(/.*|$)
-            pathType: Prefix
-            backend:
-              service:
-                name: fast-api-service
-                port:
-                      name: http
+#          - path: /docs(/.*|$)
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: fast-api-service
+#                port:
+#                      name: http

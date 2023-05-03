@@ -137,18 +137,24 @@ def query_inference_endpoint(filename: Path, api_token: Optional[str] = None,
 
         try:
             response = requests.post(url=api_url, headers=headers, data=data)
-            logging.info(response)
+            logging.info(f'{response}, {response.text}')
         except (InvalidSchema, requests.exceptions.MissingSchema):
             logging.error(f'There is an issue with either the K8 secrets or .env variables for API_URL. '
                           f'Do not wrap either in single or double quotation marks')
             return None
 
         response_json = response.json()
-        if response.status_code == '503':
+        if response.status_code == 503:
             if 'estimated_time' in response_json.keys():
                 logging.warning(f'Model needs to be loaded: {response.json()}')
                 time.sleep(int(response_json['estimated_time']) + 2)
                 continue
+            else:
+                logging.warning(f'503 without estimated wait time: {response.text}')
+                time.sleep(2)
+        if response.status_code == 429:
+            logging.warning(f'Too many requests. Waiting 2 seconds: {response.text}')
+            time.sleep(2)
 
         # If good response return result
         if response.status_code == 200 and 'text' in response_json.keys():

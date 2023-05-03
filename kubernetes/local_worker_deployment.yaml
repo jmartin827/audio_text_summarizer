@@ -7,6 +7,8 @@ spec:
     matchLabels:
       app: celery-worker
   replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -71,10 +73,10 @@ spec:
               mountPath: /input
           resources:
             limits:
-              cpu: "1.5"
+              cpu: "1.0"
               memory: "1200Mi"
             requests:
-              cpu: "1.25"
+              cpu: "1.0"
               memory: "1000Mi"
       volumes:
         - name: shared-file-input-pv

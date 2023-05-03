@@ -47,10 +47,10 @@ spec:
                 name: app-configs
           resources:
             limits:
-              cpu: "0.1"
+              cpu: "0.05"
               memory: "128Mi"
             requests:
-              cpu: "0.05"
+              cpu: "0.01"
               memory: "64Mi"
 
 --- # TODO get flower api working for info throughout manifest
@@ -79,10 +79,10 @@ spec:
             - containerPort: 8888
           resources:
             limits:
-              cpu: "0.075"
+              cpu: "0.03"
               memory: "128Mi"
             requests:
-              cpu: "0.05"
+              cpu: "0.01"
               memory: "64Mi"
           readinessProbe:
             httpGet:
@@ -127,11 +127,11 @@ spec:
               containerPort: 8000
           resources:
             limits:
-              cpu: "0.125"
-              memory: "512Mi"
+              cpu: "0.10"
+              memory: "400Mi"
             requests:
-              cpu: "0.100"
-              memory: "512Mi"
+              cpu: "0.05"
+              memory: "300Mi"
           readinessProbe:
             httpGet:
               path: /api/healthcheck

@@ -10,12 +10,12 @@ RUN python -m pip install -r requirements.txt && \
     python -m spacy download en_core_web_sm && \
     python -m spacy link en_core_web_sm en
 
-# Update and install git
-RUN apt-get update && apt-get install -y git
-
-# VI and redis cli for testing/debug
-RUN apt-get install -y vim
-RUN apt-get install -y redis-server
+RUN apt-get update && apt-get install -y \
+    git \
+    ffmpeg \
+    vim  \
+    redis-server\
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the current directory contents into the container at /app
 COPY . /
