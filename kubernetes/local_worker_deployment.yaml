@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: celery-worker
-          image: dockerman2322/celery:test
+          image: dockerman2322/celery:amd64
           imagePullPolicy: Always
           # Constantly checks that it can communicate with redis
           readinessProbe:

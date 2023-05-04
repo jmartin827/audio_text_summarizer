@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: celery-worker
-          image: dockerman2322/celery-remote:test
+          image: dockerman2322/celery-remote:amd64
           imagePullPolicy: Always
           # Constantly checks that it can communicate with redis
           # Update if running locally or no K8 redis service used

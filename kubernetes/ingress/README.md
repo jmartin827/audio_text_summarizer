@@ -1,61 +1,84 @@
-# Deploy to K8 Cluster with Ingress and Domain
+## Basic Digital Ocean Ingress Quick Start
 
-## Terraform Deployment of K8 Cluster:
-Digital Ocean(DO) API Token for Terraform:
+Summarized from this guide:
+https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes
+
+# Deploy services:
 ```bash
-export TF_VAR_do_token='your-token'
-```
-```bash
-terraform init
-```
-```bash
-terraform plan
-```
-```bash
-terraform apply
+kubectl apply -f ../kustomization.yaml
 ```
 
-Login into Digital Ocean account and add cluster credentials to kubectl--refer to DO documentation.
+Verify everything is ready:
+```bash
+kubectl get svc
+kubectl get pods
+```
 
-
-## Basic Ingress Configuration
-Ingress configuration reference: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes
-Run through slowly and may need to be reran to get it working.
-Run file to apply all the K8 manifest files:
-
-Apply ingress controller specifically for Digital Ocean. (Modify for other providers)
+Kubernetes Nginx Ingress Controller
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/do/deploy.yaml
 ```
-Confirm Ingress is running:
+
+Verify two pods completed and one is running:
 ```bash
 kubectl get pods -n ingress-nginx \
   -l app.kubernetes.io/name=ingress-nginx --watch
-```
-Confirm LB is running:
+  ```
+
+Verify that the ingress-nginx-controller has an external IP address:
 ```bash
 kubectl get svc --namespace=ingress-nginx
 ```
 
-Ensure file is modified for your domain before applying:
+Add in DNS records pointing to Load Balancer and confirm with CURL:
+Failed curl for .dev... might be domain type specific as it's ssl only
+
+Apply the cert manager:
 ```bash
-kubectl apply -f ingress.yaml
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.7.1/cert-manager.yaml
 ```
 
-Apply remaining 
+Roll out staging:
 ```bash
-# Optional
-#kubectl create -f staging_issuer.yaml
+kubectl create -f staging_issuer.yaml
+```
+(Note that certificates will only be created after annotating and 
+updating the Ingress resource provisioned in the previous step.)
+
+Roll out prod: (This is likely pointless and should be removed)
+```bash
 kubectl create -f prod_issuer.yaml
 ```
+
+
+Only required as a Digital Ocean Workaround:
 ```bash
 kubectl apply -f ingress_nginx_svc.yaml
 ```
-Wait until certificate has been created:
+
+
+Use with staging issuer:
+```bash
+kubectl apply -f ingress.yaml
+```
+
+Validate there is a created certificate:
 ```bash
 kubectl describe ingress
 ```
+
+Validate:
+```bash
+wget --save-headers -O- echo1.example.com
+```
+
+
+Use with production issuer:
 ```bash
 kubectl apply -f ingress.yaml
+```
+
+Verify:
+```bash
+kubectl describe certificate echo-tls
 ```

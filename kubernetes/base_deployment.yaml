@@ -114,7 +114,7 @@ spec:
     spec:
       containers:
         - name: fast-api
-          image: dockerman2322/fast-api:test  # TODO clearly define CORS once testing done
+          image: dockerman2322/fast-api:amd64  # TODO clearly define CORS once testing done
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
