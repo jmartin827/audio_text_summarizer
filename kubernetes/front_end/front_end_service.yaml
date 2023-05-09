@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-service
+  annotations:
+    description: ReactJS Front end served by Nginx
+spec:
+  selector:
+    app: react-front-end
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

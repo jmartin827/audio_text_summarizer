@@ -8,9 +8,12 @@ resources:
   - volumes.yaml
   - base_deployment.yaml
 # Run locally. Requires 1 CPU
-  - local_worker_deployment.yaml
+#  - local_worker_deployment.yaml
 # Uploads files to Inference Endpoint VIA Celery worker's threading.
-#  - remote_worker_deployment.yaml
+  - remote_worker_deployment.yaml
 # Local testing ingress
 #  - local_test_ingress
   - services.yaml
+# ReactJS Front End
+  - front_end/front_end_deployment.yaml
+  - front_end/front_end_service.yaml

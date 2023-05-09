@@ -84,18 +84,18 @@ spec:
             requests:
               cpu: "0.01"
               memory: "64Mi"
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8888
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:  # TODO enable flower API and use elsewhere for worker status
-            httpGet:
-              path: /
-              port: 8888
-            initialDelaySeconds: 10
-            periodSeconds: 20
+#          readinessProbe: # TODO fix this
+#            httpGet:
+#              path: /
+#              port: 8888
+#            initialDelaySeconds: 5
+#            periodSeconds: 10
+#          livenessProbe:  # TODO enable flower API and use elsewhere for worker status
+#            httpGet:
+#              path: /
+#              port: 8888
+#            initialDelaySeconds: 10
+#            periodSeconds: 20
 
 ---
 apiVersion: apps/v1

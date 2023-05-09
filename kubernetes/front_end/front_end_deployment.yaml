@@ -1,0 +1,29 @@
+# Local deployment which runs within the cluster.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-front-end
+spec:
+  selector:
+    matchLabels:
+      app: react-front-end
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: react-front-end
+    spec:
+      containers:
+        - name: react-front-end
+          image: dockerman2322/front_end:amd64
+          imagePullPolicy: Always
+          ports:
+            - name: react-front-end
+              containerPort: 8000
+          resources:
+            limits:
+              cpu: "0.1"
+              memory: "128Mi"
+            requests:
+              cpu: "0.1"
+              memory: "128Mi"

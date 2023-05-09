@@ -4,28 +4,40 @@ metadata:
   name: audio-summarizer-ingress
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    # Works. TODO refactor and add multi-domain capability
-    nginx.ingress.kubernetes.io/rewrite-target: $request_uri
-#    nginx.ingress.kubernetes.io/rewrite-target: $1$2
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$2
+    # TODO rectify this:
+    # Issue with mime type and reverse proxy for the front end!
+    # Works fine with port forwarded and previewed with kubectl
+#    nginx.ingress.kubernetes.io/add-base-content-type: "true"
+#    nginx.ingress.kubernetes.io/base-content-type: "application/javascript"
 
+# TODO parameterize the host info
 spec:
+  tls:
+    - hosts:
+        - audio-summarize.josh-martin.dev
+        - josh-martin.dev
+        - test.josh-martin.dev
+      secretName: echo-tls
   rules:
-    - host: josh-martin.dev
-      http:
+  - host: audio-summarize.josh-martin.dev
+    http:
         paths:
-          - path: /api(/.*|$)
-            pathType: Prefix
-            backend:
-              service:
-                name: fast-api-service
-                port:
-                      name: http
-#          - path: /docs(/.*|$)
-#            pathType: Prefix
-#            backend:
-#              service:
-#                name: fast-api-service
-#                port:
-#                      name: http
+        - pathType: Prefix
+          path: /api(/|$)(.*)
+          backend:
+            service:
+              name: fast-api-service
+              port:
+                number: 80
+  - host: audio-summarize.josh-martin.dev
+    http:
+      paths:
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: react-service
+              port:
+                number: 80

@@ -7,10 +7,13 @@ name=$1
 #docker buildx create --name mybuilder
 
 ## TODO debug issues with amd64 image size for whisper ai using buildx
-#platforms="linux/amd64"
-#--platform $platforms
+#platforms="linux/arm64"
+platforms="linux/amd64"
+tag="${platforms#*/}"
 
 
-docker buildx build --push -t "$name"/celery:test ./celery_worker
-docker buildx build --push -t "$name"/celery-remote:test ./celery_remote
-docker buildx build --push -t "$name"/fast-api:test ./fast_api
+
+#docker buildx build --push --platform $platforms -t "$name"/celery:"$tag" ./celery_worker
+#docker buildx build --push --platform $platforms -t "$name"/celery-remote:"$tag" ./celery_remote
+#docker buildx build --push --platform $platforms -t "$name"/fast-api:"$tag" ./fast_api
+docker buildx build --push --platform $platforms -t "$name"/front_end:"$tag" ./front_end

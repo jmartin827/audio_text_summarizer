@@ -6,6 +6,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {Box, Button, Grid, Link, TextField, Typography} from '@mui/material';
 
 // TODO implement .env to set url target
+// TODO set base url using axios default method
 
 function App() {
     const base_url : string = process.env.REACT_APP_API_BASE

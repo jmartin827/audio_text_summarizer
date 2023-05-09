@@ -20,11 +20,10 @@ metadata:
   annotations:
     description: FastAPI service for front end
 spec:
-  type: NodePort
+#  type: ClusterIP  # TODO determine if this is optimal
   selector:
     app: fast-api
   ports:
     - name: http
       port: 80
       targetPort: 8000
-      nodePort: 32767

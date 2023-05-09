@@ -1,63 +1,42 @@
 ## Basic Digital Ocean Ingress Quick Start
 
-Summarized from this guide:
-https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-with-cert-manager-on-digitalocean-kubernetes
+Adapted from this article:
+https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nginx-ingress-on-digitalocean-kubernetes-using-helm
 
-# Deploy services:
-```bash
-kubectl apply -f ../kustomization.yaml
-```
-
-Verify everything is ready:
+Deploy services using main README.MD in root folder and verify everything is ready:
 ```bash
 kubectl get svc
 kubectl get pods
 ```
 
 Kubernetes Nginx Ingress Controller
+
+(Note may be advisable to wait a few minutes after the cluster is provisioned)
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/do/deploy.yaml
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install nginx-ingress ingress-nginx/ingress-nginx --set controller.publishService.enabled=true
 ```
 
-Verify two pods completed and one is running:
+Wait until load balancer has an external ip address:
 ```bash
-kubectl get pods -n ingress-nginx \
-  -l app.kubernetes.io/name=ingress-nginx --watch
+kubectl --namespace default get services -o wide -w nginx-ingress-ingress-nginx-controller
   ```
 
-Verify that the ingress-nginx-controller has an external IP address:
-```bash
-kubectl get svc --namespace=ingress-nginx
-```
+Add in DNS records pointing to Load Balancer.
+If using cloudflare--ensure SSL/TLS is set to "Full" once the SSL cert is created or a redirect loop may occur.
 
-Add in DNS records pointing to Load Balancer and confirm with CURL:
-Failed curl for .dev... might be domain type specific as it's ssl only
 
-Apply the cert manager:
+Setup cert-manager and also apply the prod_issuer.yaml:
 ```bash
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.7.1/cert-manager.yaml
-```
-
-Roll out staging:
-```bash
-kubectl create -f staging_issuer.yaml
-```
-(Note that certificates will only be created after annotating and 
-updating the Ingress resource provisioned in the previous step.)
-
-Roll out prod: (This is likely pointless and should be removed)
-```bash
+kubectl create namespace cert-manager
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.10.1 --set installCRDs=true
 kubectl create -f prod_issuer.yaml
 ```
 
-
-Only required as a Digital Ocean Workaround:
-```bash
-kubectl apply -f ingress_nginx_svc.yaml
-```
-
-
-Use with staging issuer:
+Apply the ingress and confirm it's working with cURL.
 ```bash
 kubectl apply -f ingress.yaml
 ```
@@ -70,12 +49,6 @@ kubectl describe ingress
 Validate:
 ```bash
 wget --save-headers -O- echo1.example.com
-```
-
-
-Use with production issuer:
-```bash
-kubectl apply -f ingress.yaml
 ```
 
 Verify:
