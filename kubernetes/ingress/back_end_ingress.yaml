@@ -1,16 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: audio-summarizer-ingress
+  name: audio-summarizer-back-end-ingress
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     kubernetes.io/ingress.class: nginx
-    # Reported that this is needed since version change of nginx
-    # Mime type issues were present
-    # https://github.com/kubernetes/ingress-nginx/issues/5265
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    # May not be needed
-    nginx.ingress.kubernetes.io/enable-cors: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$2
 
 spec:
   tls:
@@ -21,13 +16,23 @@ spec:
         - api.josh-martin.dev
       secretName: echo-tls
   rules:
-  - host: josh-martin.dev
+#  - host: josh-martin.dev # TODO debug compatibility with front end ingress
+#    http:
+#        paths:
+#        - pathType: Prefix
+#          path: /api(/|$)(.*)
+#          backend:
+#            service:
+#              name: fast-api-service
+#              port:
+#                number: 80
+  - host: api.josh-martin.dev
     http:
       paths:
         - pathType: Prefix
-          path: /?(.*)  # Reported this is needed with nginx version change
+          path: /api(/|$)(.*)
           backend:
             service:
-              name: react-service
+              name: fast-api-service
               port:
                 number: 80
