@@ -21,7 +21,8 @@ async def log_requests(request: Request, call_next):
     """
     Log all incoming requests for debugging
     """
-    logging.debug(f"{request.method} {request.url}")
+    headers = dict(request.headers)
+    logging.debug(f"Request: {request.method} {request.url} Headers: {headers}")
     response = await call_next(request)
     return response
 

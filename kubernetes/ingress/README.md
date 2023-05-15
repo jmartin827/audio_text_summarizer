@@ -36,9 +36,17 @@ helm install cert-manager jetstack/cert-manager --namespace cert-manager --versi
 kubectl create -f prod_issuer.yaml
 ```
 
-Apply the ingress and confirm it's working with cURL.
+Apply the ingress files and confirm it's working with cURL.
+Ensure all hosts are identical so that ttl secrets for SSL are correct.
+
+
+front_end_ingress.yaml: ReactJS front end for the domain root example.com
+back_end_ingress.yaml: Back end FastAPI Rest API for api.example.com
+back_end_ingress_root.yaml: Manages requests such as example.com/api.example.com/api/[query]
 ```bash
-kubectl apply -f ingress.yaml
+kubectl apply -f front_end_ingress.yaml
+kubectl apply -f back_end_ingress.yaml
+kubectl apply -f back_end_ingress_root.yaml
 ```
 
 Validate there is a created certificate:

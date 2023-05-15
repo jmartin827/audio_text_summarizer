@@ -8,24 +8,21 @@ metadata:
     # Reported that this is needed since version change of nginx
     # Mime type issues were present
     # https://github.com/kubernetes/ingress-nginx/issues/5265
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
-    # May not be needed
-    nginx.ingress.kubernetes.io/enable-cors: "false"
+#    nginx.ingress.kubernetes.io/rewrite-target: /$1
 
 spec:
   tls:
     - hosts:
-        - audio-summarize.josh-martin.dev  # front end mime type issue
-        - josh-martin.dev # no such front end mime type issue!
+        - audio-summarize.josh-martin.dev
+        - josh-martin.dev
         - test.josh-martin.dev
-        - api.josh-martin.dev
       secretName: echo-tls
   rules:
   - host: josh-martin.dev
     http:
       paths:
-        - pathType: Prefix
-          path: /?(.*)  # Reported this is needed with nginx version change
+        - pathType: Exact
+          path: /(?!api)(.*)  # Will not match if API word present
           backend:
             service:
               name: react-service

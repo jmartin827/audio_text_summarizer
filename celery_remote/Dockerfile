@@ -25,4 +25,6 @@ WORKDIR /worker
 # TODO have an iniitalization which sends a test job to the endpoint in case the model is not preloaded.
 ENTRYPOINT sh -c 'until redis-cli -h redis -p 6379 ping; do sleep 4; done && celery --app tasks.process worker --pool=gevent --concurrency=200 --loglevel=info --without-mingle'
 
+# TODO have better time outs as it can take a while to load model and cause job to fail.
+# TODO ensure there is a retry/kill job/worker time which would directly and indirectly help with this issue
 
