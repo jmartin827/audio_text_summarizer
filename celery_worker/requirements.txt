@@ -2,4 +2,6 @@ celery~=5.2.7
 redis~=4.5.1
 pydantic~=1.10.5
 spacy~=3.5.0
-openai-whisper==20230314
+# Whisper AI Option
+#  openai-whisper==20230314
+faster-whisper

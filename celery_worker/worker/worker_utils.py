@@ -7,7 +7,9 @@ from typing import List
 
 import redis
 import spacy
-import whisper
+# Depreciated whisper for faster whisper variant
+# import whisper
+from faster_whisper import WhisperModel
 from spacy.lang.en.stop_words import STOP_WORDS
 
 
@@ -102,15 +104,22 @@ def transcribe_audio(audio_file: Path) -> str:
 
     start = time.time()
 
+    # Whisper AI option:
     # Load model and transcribe audio
-    model = whisper.load_model("tiny.en")
-    result = model.transcribe(f'{audio_file}', fp16=False)
+    # model = whisper.load_model("tiny.en")
+    # result = model.transcribe(f'{audio_file}')
+    # text = result["text"]
+
+    # TODO build docker image with model
+    model = WhisperModel(model_size_or_path="tiny", compute_type='float32')
+    segments, info = model.transcribe(str(audio_file), word_timestamps=True)
+    text = ''.join([segment.text for segment in list(segments)])
 
     elapsed = time.time()
     elapsed_time = round((elapsed - start), 2)
-    logging.info(f'Transcription time: {elapsed_time} seconds. Raw Transcription: {result["text"]}')
 
-    return result["text"]
+    logging.info(f'Transcription time: {elapsed_time} seconds. Raw Transcription: {text}')
+    return text
 
 
 def get_redis_client(db_num: int) -> redis.Redis:
@@ -127,3 +136,5 @@ def get_redis_client(db_num: int) -> redis.Redis:
     client.execute_command('SELECT', db_num)
 
     return client
+
+# transcribe_audio('../common_voice_en_34956476.mp3')
