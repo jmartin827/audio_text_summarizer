@@ -19,6 +19,8 @@ There are some checks (postStart, readinessProbe, etc) within the K8 deployment 
 
 These instructions will help you get this project running on a local machine.
 
+--> For an actual deployment see kubernetes/ingress/README.md and skip local ingress
+deployment.
 ### Prerequisites
 
 - [Python 3.10](https://www.python.org/downloads/)
@@ -47,15 +49,19 @@ These instructions will help you get this project running on a local machine.
    minikube addons enable ingress
    minikube addons enable ingress-dns
    ```
+   **Optional for celery_remote processing**
 
-   **Required:**
+   Requires HuggingFace API key:
    ```bash
     # Load secrets
     kubectl create secret generic my-secret --from-env-file=.env.secrets
    ```
+
+   **Required:**
+
+   Base Deployment:
+   Uncomment either Local or Remote Celery Worker in kubernetes/kustomization.yaml
    ```bash
-    # Comment out configmap in kustomize file and create dynamically from .env if desired:
-    # kubectl create configmap app-configs --from-env-file=.env 
     kubectl apply -k ./kubernetes
     ```
    
@@ -66,7 +72,7 @@ These instructions will help you get this project running on a local machine.
    kubectl port-forward deployment/fast-api 8000:8000
    ```
    
-   **Optional for proxy:**
+   **Optional for local test proxy:**
 
    --> Update local_test_ingress with desired domain name.
 
@@ -116,10 +122,13 @@ These instructions will help you get this project running on a local machine.
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Celery](https://docs.celeryproject.org/en/stable/)
 - [Whisper](https://github.com/openai/whisper)
+- [faster-whisper](https://github.com/guillaumekln/faster-whisper)
 - [spaCy](https://spacy.io/)
 - [Redis](https://redis.io/)
 - [React](https://react.dev/)
+- [Material UI (MUI)](https://github.com/mui/material-ui)
 - [Minikube](https://minikube.sigs.k8s.io/)
+- [Ingress NGINX Controller](https://github.com/kubernetes/ingress-nginx)
 - [Kubernetes](https://kubernetes.io/)
 - [Mozilla Common Voice](https://github.com/common-voice/common-voice)
 

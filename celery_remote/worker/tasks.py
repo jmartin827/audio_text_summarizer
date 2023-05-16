@@ -34,8 +34,6 @@ def process_file(audio_task_in: dict) -> str | None:  # TODO find better type hi
 
     # Convert to string for Redis
     summary = ' '.join(get_summary(text_in=transcription, ratio=file_state["ratio"]))
-    percent = round((len(" ".join(summary)) / len(transcription)), 2) * 100
-    # TODO fix broken percent logging info
 
     # file_state
     file_state = {**file_state, 'summary': summary,

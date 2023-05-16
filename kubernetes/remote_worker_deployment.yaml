@@ -42,8 +42,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: app-configs
-            - secretRef:
-                name: my-secret
+#            - secretRef:
+#                name: my-secret
           volumeMounts:
             - name: shared-file-input-pv
               mountPath: /input

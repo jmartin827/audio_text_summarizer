@@ -7,7 +7,7 @@ resources:
   - configmap.yaml
   - volumes.yaml
   - base_deployment.yaml
-# Run locally. Requires 1 CPU
+# Run locally. Requires 1 vCPU
   - local_worker_deployment.yaml
 # Uploads files to Inference Endpoint VIA Celery worker's threading.
 #  - remote_worker_deployment.yaml

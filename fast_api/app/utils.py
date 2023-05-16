@@ -14,7 +14,7 @@ def logging_setup():
     )
 
     # Set logging level
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.INFO)
 
 
 def get_redis_client(db_num: int) -> redis.Redis:

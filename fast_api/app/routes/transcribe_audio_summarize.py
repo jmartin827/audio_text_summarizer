@@ -5,11 +5,13 @@ from typing import Dict
 
 import aiofiles
 import celery
+import pydantic
 from fastapi import APIRouter, HTTPException, Form
 from fastapi import Request, File, UploadFile
 from starlette import status
 
 from app.utils import logging_setup, get_redis_client, check__limit_job_count
+from app.models import AudioTaskValidator
 
 router = APIRouter()
 
@@ -34,10 +36,23 @@ def get_celery_setup() -> celery.Celery:
 async def process(request: Request, in_file: UploadFile = File(...), summary_ratio: float = Form(...)) -> Dict:
     """Accepts a file upload, verifies inputs, and adds task to Celery que.
     Logs the IP address of the client.
+    Checks to see if CloudFlare header exists and defaults to FastAPI supplied user IP if non existent.
+    "x-forwarded-for" is a potential option if not using Cloudflare proxy.
     """
 
     # Track number of jobs per single IP address to throttle use
-    client_host_ip = str(request.client.host)
+    # Attempts to locate x-original-forwarded-for header and if not default to FastAPI supplied.
+
+    try:
+        logging.debug(f'Header during check: {request.headers}')
+        client_host_ip = request.headers['x-original-forwarded-for']
+    except (ValueError, KeyError):
+        client_host_ip = str(request.client.host)
+        logging.info(
+            f'Unable to locate x-original-forwarded-for header. Defaulting to request.client.host. '
+            f'Confirm IP address is accurate and changing header used to determine user IP.'
+        )
+        pass
 
     # Set Job UUID
     # TODO limit upload size
@@ -65,6 +80,12 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
         'client_ip': client_host_ip,
         'status': 0,  # Not complete/False
     }
+
+    try:
+        AudioTaskValidator(**data)
+    except pydantic.error_wrappers.ValidationError as e:
+        logging.info(f'Error validating provided data: {e}')
+        return {'Error': f'Unable to process job due to error: {e}'}
 
     async with aiofiles.open(f'../input/{task_uuid}', 'wb') as out_file:
         # Setting larger chunk size
