@@ -19,10 +19,16 @@ There are some checks (postStart, readinessProbe, etc) within the K8 deployment 
 
 These instructions will help you get this project running on a local machine.
 
+--> For an actual deployment see kubernetes/ingress/README.md and skip local ingress
+deployment.
 ### Prerequisites
 
 - [Python 3.10](https://www.python.org/downloads/)
 - [pip](https://pip.pypa.io/en/stable/installation/)
+- [minikube](https://minikube.sigs.k8s.io/docs/)
+- [Node.js](https://nodejs.org/en)
+- [npm](https://www.npmjs.com/)
+- [docker](https://www.docker.com/)
 
 ### Installing
 
@@ -38,13 +44,53 @@ These instructions will help you get this project running on a local machine.
    ```bash
    minikube start
    ```
+   **Optional for local test proxy:**
    ```bash
-    kubectl create configmap app-configs --from-env-file=.env 
+   minikube addons enable ingress
+   minikube addons enable ingress-dns
+   ```
+   **Optional for celery_remote processing**
+
+   Requires HuggingFace API key:
+   ```bash
+    # Load secrets
+    kubectl create secret generic my-secret --from-env-file=.env.secrets
+   ```
+
+   **Required:**
+
+   Base Deployment:
+   Uncomment either Local or Remote Celery Worker in kubernetes/kustomization.yaml
+   ```bash
     kubectl apply -k ./kubernetes
     ```
+   
+   **No proxy**
+
    Forward FastAPI port for React and local testing:
    ```bash
    kubectl port-forward deployment/fast-api 8000:8000
+   ```
+   
+   **Optional for local test proxy:**
+
+   --> Update local_test_ingress with desired domain name.
+
+   macOS:
+
+   Add entry within /etc/hosts: 
+   127.0.0.1 example.com
+
+   Others:
+
+   See if above works and if not use IP address supplied below:
+   ```bash
+   kubectl get ingress
+   ```
+   
+   Start tunnel:
+   ```bash
+   minikube tunnel
    ```
 4. Build/Push Changes
    If desired a simple script is provided which will push the updated docker images to a specified username
@@ -58,6 +104,12 @@ These instructions will help you get this project running on a local machine.
    npm install 
    cd ../
    ```
+   Optional for proxy:
+   
+   Set variable within .env.development
+   http://127.0.0.1:8000 -> desired domain being proxied
+
+
    Start Dev Server    
    ```bash
    npm start --prefix ./front_end
@@ -70,10 +122,13 @@ These instructions will help you get this project running on a local machine.
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Celery](https://docs.celeryproject.org/en/stable/)
 - [Whisper](https://github.com/openai/whisper)
+- [faster-whisper](https://github.com/guillaumekln/faster-whisper)
 - [spaCy](https://spacy.io/)
 - [Redis](https://redis.io/)
 - [React](https://react.dev/)
+- [Material UI (MUI)](https://github.com/mui/material-ui)
 - [Minikube](https://minikube.sigs.k8s.io/)
+- [Ingress NGINX Controller](https://github.com/kubernetes/ingress-nginx)
 - [Kubernetes](https://kubernetes.io/)
 - [Mozilla Common Voice](https://github.com/common-voice/common-voice)
 
@@ -85,7 +140,7 @@ This is a work in progress--any feedback and suggestions are welcomed.
 
 ### Notes and basic troubleshooting
 
-This project can be run using either docker-compose or kubernetes.
+This project can be run using kubernetes VIA minikube or with some effort starting each container individually.
 
 #### Random Notes
 

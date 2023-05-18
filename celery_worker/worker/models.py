@@ -1,16 +1,27 @@
-# import json
-# from typing import Optional
-#
-# from pydantic import BaseModel, constr
-# TODO finish and use as a validator for both ends of celery
-#
-# class AudioTranscribeSummary(BaseModel):
-#     job_uuid: str
-#     summary: str = ''
-#     transcription: str = ''
-#     original_filename: str
-#     ratio: float = 0
-#     client_ip: str = ''
-#     # 0 is in-progress/not complete and 1 is complete
-#     # Constrain value to '0' or '1'
-#     status: constr(regex='[01]')
+from pydantic import BaseModel, Field, HttpUrl, IPvAnyAddress, constr, confloat, conint, validator
+import uuid
+
+
+def is_valid_uuid(value):
+    try:
+        uuid.UUID(str(value))
+        return True
+    except ValueError:
+        return False
+
+
+class AudioTaskValidator(BaseModel):
+    job_uuid: str = Field(..., description='UUIDv1 string representation')
+
+    @validator('job_uuid')
+    def validate_uuid(cls, value):
+        if not is_valid_uuid(value):
+            raise ValueError('Invalid UUID format')
+        return value
+
+    summary: str = ''
+    transcription: str = ''
+    original_filename: str = Field(..., description='Path or filename')
+    ratio: confloat(ge=0.1, le=1.0)
+    client_ip: IPvAnyAddress
+    status: conint(ge=0, le=1)

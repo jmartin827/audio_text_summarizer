@@ -6,22 +6,18 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 COPY requirements.txt .
 
+# Issues using precompiled binary.
 RUN python -m pip install -r requirements.txt && \
     python -m spacy download en_core_web_sm && \
     python -m spacy link en_core_web_sm en
 
-# Update and install git
-RUN apt-get update && apt-get install -y git
-
-# Install ffmpeg for whisper audio transcription
-RUN apt-get install -y ffmpeg
-
-# Install latest OpenAI whisper pip package
-RUN python -m pip install git+https://github.com/openai/whisper.git
-
-# VI and redis cli for testing/debug
-RUN apt-get install -y vim
-RUN apt-get install -y redis-server
+# Install packages for operation and testing
+RUN apt-get update && apt-get install -y \
+    git \
+    ffmpeg \
+    vim  \
+    redis-server\
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the current directory contents into the container at /app
 COPY . /

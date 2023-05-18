@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: back-end-ingress-root
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+
+    # Basic Limits
+    nginx.ingress.kubernetes.io/proxy-body-size: "15m"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+
+# TODO depreciate as this is a CORS workaround
+spec:
+  tls:
+    - hosts:
+        - josh-martin.dev
+      secretName: back-end-ingress-root-tls
+  rules:
+  - host: josh-martin.dev
+    http:
+      paths:
+          - pathType: Prefix
+            path: /api.josh-martin.dev(/)(.*)  # TODO refactor to not allow swagger ui access
+            backend:
+              service:
+                name: fast-api-service
+                port:
+                  name: http

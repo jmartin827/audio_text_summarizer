@@ -3,16 +3,23 @@ import React, {useState} from 'react';
 import axios from 'axios';
 import './App.css';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import {Box, Button, Grid, Link, TextField, Typography} from '@mui/material';
+import {Box, Button, Grid, Link, styled, TextField, Typography} from '@mui/material';
 
-
-function App() {
-
+function Process() {
     const [file, setFile] = useState(null);
     const [uuid, setUuid] = useState(null);
     const [status, setStatus] = useState(null);
     const [ratio, setRatio] = useState(1);
     const defaultStatus = 'Upload File To Continue';
+    const [isUploading, setIsUploading] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const ScrollableBox = styled(Box)`
+      max-height: 400px;
+      overflow-y: auto;
+    `;
+
+    axios.defaults.baseURL = process.env.REACT_APP_API_BASE;
 
 
     const onFileChange = (event) => {
@@ -29,9 +36,10 @@ function App() {
         formData.append('in_file', file);
         // @ts-ignore
         formData.append('summary_ratio', ratio);
+        setIsUploading(true);
 
-        console.log('Sending POST request to server...');
-        axios.post('http://127.0.0.1:8000/api/process', formData, {responseType: 'json'})
+        console.log('POST to /api/process')
+        axios.post('/api/process', formData, {responseType: 'json'})
             .then(response => {
                 // TODO change back end so the Key in response is descriptive and usable here for all cases.
                 console.log('Received response from server:', response);
@@ -40,28 +48,38 @@ function App() {
                     setUuid(uuid);
                     setStatus('Processing');
                     pollResult(uuid);
+
+                    setIsUploading(false);
+                    setIsProcessing(true)
                 }
 
             })
             .catch(error => {
                 console.error('Error occurred during POST request:', error);
+                setStatus('Error: Unable to upload');
+
+                setIsProcessing(false);
+                setIsUploading(false)
             });
     };
 
     const pollResult = (uuid) => {
-        console.log('Sending GET request to server...');
-        axios.get(`http://127.0.0.1:8000/api/result?task_uuid=${uuid}`)
+        console.log('POST to /api/result?task_uuid=' + uuid)
+        axios.get('/api/result?task_uuid=' + uuid)
             .then(response => {
                 console.log('Received response from server:', response);
                 //TODO refactor back and front end for better status checks
                 if (response.data !== 'Processing') {
                     setStatus(response.data);
+                    setIsProcessing(false);
                 } else {
                     setTimeout(() => pollResult(uuid), 1000);
                 }
             })
             .catch(error => {
                 console.error('Error occurred during GET request:', error);
+                setIsProcessing(false);
+                setIsUploading(false);
             });
     };
 
@@ -79,7 +97,7 @@ function App() {
                 }}
             >
                 <Grid container spacing={1} justifyContent="center">
-                    <Grid item xs={1.3}>
+                    <Grid item xs={2}>
                         <input
                             accept="audio/*"
                             id="contained-button-file"
@@ -87,24 +105,34 @@ function App() {
                             type="file"
                             style={{display: "none"}}
                             onChange={onFileChange}
+                            disabled={isProcessing || isUploading}
                         />
-                        {/*TODO grey out the upload button when waiting on response and produce error msg if no resp*/}
                         <label htmlFor="contained-button-file">
                             <Button
                                 variant="contained"
-                                component="span"
+                                color="primary"
                                 startIcon={<CloudUploadIcon/>}
+                                component="span"
+                                disabled={isProcessing || isUploading}
+
+                                sx={{opacity: isProcessing || isUploading ? 0.5 : 1}}
                             >
-                                Upload
+                                {isUploading ? 'Uploading...' : 'Upload'}
+
                             </Button>
                         </label>
                     </Grid>
                     <Grid item xs={1.3}>
-                        <Button variant="contained" color="primary" type="submit">
-                            Submit
-                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            type="submit"
+                            disabled={isProcessing || isUploading}
+                            sx={{opacity: isProcessing || isUploading ? 0.5 : 1}}
+                        >
+                            {isProcessing ? 'Processing...' : 'Submit'}                        </Button>
                     </Grid>
-                    <Grid item xs={2}>
+                    <Grid item xs={1.3}>
                         <TextField
                             id="summary-ratio"
                             label="Summary Ratio"
@@ -131,25 +159,30 @@ function App() {
                     </Grid>
                 </Grid>
 
-
                 <Grid container spacing={1} justifyContent="center">
                     <Grid item xs={10}>
-                        <Box>
-                            <Typography variant="h6" gutterBottom>
-                                Status:
-                            </Typography>
-                            <Box
-                                border={1}
-                                borderColor="primary.main"
-                                borderRadius={2}
-                                p={2}
-                                sx={{whiteSpace: 'pre-wrap', overflowWrap: 'break-word'}}
-                            >
-                                {status ? status : defaultStatus}
+                        <ScrollableBox>
+                            <Box>
+                                <Typography variant="h6" gutterBottom>
+                                    Status:
+                                </Typography>
+                                <Box
+                                    border={1}
+                                    borderColor="primary.main"
+                                    borderRadius={2}
+                                    p={2}
+                                    sx={{
+                                        whiteSpace: 'pre-wrap',
+                                        overflowWrap: 'break-word',
+                                    }}
+                                >
+                                    {status ? status : defaultStatus}
+                                </Box>
                             </Box>
-                        </Box>
+                        </ScrollableBox>
                     </Grid>
                 </Grid>
+
 
                 <Box sx={{
                     position: 'absolute',
@@ -168,7 +201,8 @@ function App() {
 
         </form>
         // TODO see why form needs a tag here and how to break this down into separate files
-    );
+    )
+        ;
 }
 
-export default App;
+export default Process;

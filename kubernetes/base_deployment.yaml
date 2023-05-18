@@ -47,95 +47,11 @@ spec:
                 name: app-configs
           resources:
             limits:
-              cpu: "0.1"
+              cpu: "0.05"
               memory: "128Mi"
             requests:
-              cpu: "0.05"
+              cpu: "0.01"
               memory: "64Mi"
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: celery-worker
-spec:
-  selector:
-    matchLabels:
-      app: celery-worker
-  replicas: 2
-  template:
-    metadata:
-      labels:
-        app: celery-worker
-    spec:
-      containers:
-        - name: celery-worker
-          image: dockerman2322/celery:test
-          imagePullPolicy: Always
-          # Constantly checks that it can communicate with redis
-          readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - >
-                  if redis-cli -h redis ping | grep -q PONG; then
-                    echo "ready"
-                    exit 0
-                  else
-                    echo "not ready"
-                    exit 1
-                  fi
-            initialDelaySeconds: 40
-            periodSeconds: 60
-            timeoutSeconds: 15
-            successThreshold: 1
-            failureThreshold: 3
-          livenessProbe:
-            exec:
-              # Will look for workers and a worker will result in "celery-worker" being shown.
-              command:
-                - sh
-                - -c
-                - "celery status | grep -q celery-worker"
-            initialDelaySeconds: 60
-            periodSeconds: 180
-            timeoutSeconds: 15
-            successThreshold: 1
-            failureThreshold: 2
-          lifecycle:
-            # Initializes the container with Whisper
-            postStart:
-              exec:
-                command:
-                  - sh
-                  - -c
-                  - |
-                    python3 initialize.py
-                    if [ $? -eq 0 ]; then
-                      echo "Validation successful"
-                    else
-                      echo "Validation failed, exiting"
-                      exit 1
-                    fi
-
-          envFrom:
-            - configMapRef:
-                name: app-configs
-          volumeMounts:
-            - name: shared-file-input-pv
-              mountPath: /input
-          resources:
-            limits:
-              cpu: "1.5"
-              memory: "1200Mi"
-            requests:
-              cpu: "1.25"
-              memory: "1000Mi"
-      volumes:
-        - name: shared-file-input-pv
-          persistentVolumeClaim:
-            claimName: shared-file-input-pvc
 
 --- # TODO get flower api working for info throughout manifest
 apiVersion: apps/v1
@@ -163,23 +79,23 @@ spec:
             - containerPort: 8888
           resources:
             limits:
-              cpu: "0.075"
+              cpu: "0.04"
               memory: "128Mi"
             requests:
-              cpu: "0.05"
+              cpu: "0.015"
               memory: "64Mi"
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8888
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:  # TODO enable flower API and use elsewhere for worker status
-            httpGet:
-              path: /
-              port: 8888
-            initialDelaySeconds: 10
-            periodSeconds: 20
+#          readinessProbe: # TODO fix this
+#            httpGet:
+#              path: /
+#              port: 8888
+#            initialDelaySeconds: 5
+#            periodSeconds: 10
+#          livenessProbe:  # TODO enable flower API and use elsewhere for worker status
+#            httpGet:
+#              path: /
+#              port: 8888
+#            initialDelaySeconds: 10
+#            periodSeconds: 20
 
 ---
 apiVersion: apps/v1
@@ -198,7 +114,7 @@ spec:
     spec:
       containers:
         - name: fast-api
-          image: dockerman2322/fast-api:test  # TODO clearly define CORS once testing done
+          image: dockerman2322/fast-api:amd64  # TODO clearly define CORS once testing done
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
@@ -211,11 +127,11 @@ spec:
               containerPort: 8000
           resources:
             limits:
-              cpu: "0.125"
-              memory: "512Mi"
+              cpu: "0.12"
+              memory: "400Mi"
             requests:
-              cpu: "0.100"
-              memory: "512Mi"
+              cpu: "0.05"
+              memory: "300Mi"
           readinessProbe:
             httpGet:
               path: /api/healthcheck

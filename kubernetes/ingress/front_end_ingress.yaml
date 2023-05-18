@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: front-end-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: nginx
+
+    # Basic Limits
+    nginx.ingress.kubernetes.io/proxy-body-size: "15m"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+
+    # This was a problem which involved a breaking Nginx change, Mime types, and url rewrites.
+    # https://github.com/kubernetes/ingress-nginx/issues/5265
+
+spec:
+  tls:
+    - hosts:
+        - josh-martin.dev
+      secretName: front-end-ingress-tls
+  rules:
+  - host: josh-martin.dev
+    http:
+      paths:
+        - pathType: Exact
+          path: /(?!api)(.*)  # Will not match if API word present
+          backend:
+            service:
+              name: react-service
+              port:
+                number: 80

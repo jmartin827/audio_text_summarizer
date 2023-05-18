@@ -33,9 +33,10 @@ def get_redis_client(db_num: int) -> redis.Redis:
     return client
 
 
-def check__limit_job_count(ip_address: str, job_uuid: str) -> None:
+def check__limit_job_count(ip_address: str, job_uuid: str, limit: int) -> None:
     """Ensures an IP address can't have more than X jobs running at once"""
     # TODO consider using Celery Que to maintain list
+    # TODO if a Celery task fails the que will not shorten until the Redis entry expires.
     client = get_redis_client(db_num=int(os.environ.get('REDIS_DB_IP')))
 
     # Decode Redis value into a list and handles potential exceptions
@@ -54,7 +55,7 @@ def check__limit_job_count(ip_address: str, job_uuid: str) -> None:
         client.rpush(ip_address, job_uuid) and client.expire(ip_address, 1200)
         return None
 
-    if que_count >= 2:
+    if que_count >= limit:
         logging.info(f'Denied user {ip_address} from submitting more than {que_count} jobs')
         raise HTTPException(
             HTTP_429_TOO_MANY_REQUESTS, f"Too Many Requests. You already have {que_count} jobs in que"

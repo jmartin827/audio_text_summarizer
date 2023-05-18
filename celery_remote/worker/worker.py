@@ -16,9 +16,7 @@ def get_celery_setup() -> celery.Celery:
 
 
 if __name__ == "__main__":
-
     if os.environ.get('REDIS_HOST') is None:
         logging.warning(f'No env variable supplied for host! --> {os.environ.get("REDIS_HOST")}')
-
     worker = get_celery_setup().Worker()
     worker.start()

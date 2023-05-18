@@ -1,7 +1,22 @@
 #!/bin/bash
 
-# Get the name from the command line argument
+# Docker or container registry name
 name=$1
 
-cd celery_worker && docker build -t "$name"/celery:test . && docker push "$name"/celery:test
-cd ../fast_api && docker build -t "$name"/fast-api:test . && docker push "$name"/fast-api:test
+# TODO review and refactor
+#docker buildx create --name mybuilder
+
+#platforms="linux/arm64"
+platforms="linux/amd64"
+tag="${platforms#*/}"
+
+
+
+#docker buildx build --push --platform $platforms -t "$name"/celery:"$tag" ./celery_worker
+#docker buildx build --push --platform $platforms -t "$name"/celery-remote:"$tag" ./celery_remote
+docker buildx build --push --platform $platforms -t "$name"/fast-api:"$tag" ./fast_api
+
+## Build the reactjs app locally and copy build file into nginx container
+#npm install --prefix ./front_end
+#npm run build --prefix ./front_end
+#docker buildx build --push --platform $platforms -t "$name"/front_end:"$tag" ./front_end

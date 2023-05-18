@@ -22,5 +22,5 @@ COPY . /
 # Expose port 8000 for the API
 EXPOSE 8000
 
-# Start the API with Uvicorn
+# Start the API with Uvicorn. Root path set by default to "/" and reflected in ingress.yaml
 CMD ["uvicorn", "app.src.main:app", "--host", "0.0.0.0", "--port", "8000"]

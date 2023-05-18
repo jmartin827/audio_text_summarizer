@@ -1,5 +1,10 @@
 # Getting Started with Create React App
 
+Work in progress.
+Leveraged temporary CORS workaround by modifying base url so requests look like: example.com/api.example.com/api/
+
+This is rewritten by the Nginx ingress and directly routed to the api service.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts

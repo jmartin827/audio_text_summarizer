@@ -4,9 +4,16 @@ kind: Kustomization
 
 resources:
 #  - namespace.yaml TODO namespaces
-#  - TODO dynamic configmap
-#  - configmap.yaml
+  - configmap.yaml
   - volumes.yaml
-  - deployment.yaml
-#  - ingress.yaml
+  - base_deployment.yaml
+# Run locally. Requires 1 vCPU
+  - workers/local_worker_deployment.yaml
+# Uploads files to Inference Endpoint VIA Celery worker's threading.
+#  - workers/remote_worker_deployment.yaml
+# Local testing ingress
+#  - local_test_ingress
   - services.yaml
+# ReactJS Front End
+  - front_end/front_end_deployment.yaml
+  - front_end/front_end_service.yaml

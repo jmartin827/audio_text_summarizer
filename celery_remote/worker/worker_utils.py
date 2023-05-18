@@ -3,13 +3,12 @@ import os
 import time
 from heapq import nlargest
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import redis
+import requests
 import spacy
-# Depreciated whisper for faster whisper variant
-# import whisper
-from faster_whisper import WhisperModel
+from requests.exceptions import InvalidSchema
 from spacy.lang.en.stop_words import STOP_WORDS
 
 
@@ -95,34 +94,6 @@ def get_summary(text_in: str, ratio: float = 0.3, max_tokens: int = 10,
     return final_summary
 
 
-def transcribe_audio(audio_file: Path) -> str:
-    """Loads the audio file and returns a transcript as a string
-    """
-    # TODO get audio sample length for logging info
-
-    logging.info(f'Processing audio file: {audio_file}')
-
-    start = time.time()
-
-    # Whisper AI option:
-    # Load model and transcribe audio
-    # model = whisper.load_model("tiny.en")
-    # result = model.transcribe(f'{audio_file}')
-    # text = result["text"]
-
-    # TODO build docker image with model
-    # faster-whisper option:
-    model = WhisperModel(model_size_or_path="tiny", compute_type='float32')
-    segments, info = model.transcribe(str(audio_file), word_timestamps=True)
-    text = ''.join([segment.text for segment in list(segments)])
-
-    elapsed = time.time()
-    elapsed_time = round((elapsed - start), 2)
-
-    logging.info(f'Transcription time: {elapsed_time} seconds. Raw Transcription: {text}')
-    return text
-
-
 def get_redis_client(db_num: int) -> redis.Redis:
     """Initialize Redis client.
     DB 0 is Celery
@@ -137,3 +108,61 @@ def get_redis_client(db_num: int) -> redis.Redis:
     client.execute_command('SELECT', db_num)
 
     return client
+
+
+def query_inference_endpoint(filename: Path, api_token: Optional[str] = None,
+                             api_url: Optional[str] = None) -> None | str:
+    """Read the file and provide delay if model needs to be loaded.
+    Ensures that after a certain amount of time and attempts that it returns None.
+    """
+
+    # Set if not given
+    if (api_url or api_token) is None:
+        api_url, api_token = os.environ.get('API_URL'), os.environ.get('API_TOKEN')
+
+    headers = {"Authorization": f"Bearer {api_token}"}
+    # TODO determine if logging this is a security risk
+    logging.info(f'Sending transcription to inference endpoint: {api_url} Header: {headers}')
+
+    with open(filename, "rb") as f:
+        data = f.read()
+
+    start, attempts = time.time(), 0
+    # Returns None if longer than 45 seconds or however the standard warmup period is.
+    while True:
+        attempts += 1
+        current_time = (start - time.time())
+        if abs(current_time) >= 60 and attempts >= 3:
+            return None
+
+        try:
+            response = requests.post(url=api_url, headers=headers, data=data)
+            logging.info(f'{response}, {response.text}')
+        except (InvalidSchema, requests.exceptions.MissingSchema):
+            logging.error(f'There is an issue with either the K8 secrets or .env variables for API_URL. '
+                          f'Do not wrap either in single or double quotation marks')
+            return None
+
+        response_json = response.json()
+        if response.status_code == 503:
+            if 'estimated_time' in response_json.keys():
+                logging.warning(f'Model needs to be loaded: {response.json()}')
+                time.sleep(int(response_json['estimated_time']) + 2)
+                continue
+            else:
+                logging.warning(f'503 without estimated wait time: {response.text}')
+                time.sleep(2)
+        if response.status_code == 429:
+            logging.warning(f'Too many requests. Waiting 2 seconds: {response.text}')
+            time.sleep(2)
+
+        # If good response return result
+        if response.status_code == 200 and 'text' in response_json.keys():
+            logging.info(f'Received transcribed audio response: {response.json()["text"]}')
+            return response.json()['text']
+
+
+if __name__ == '__main__':
+    query_inference_endpoint(api_token='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',
+                             api_url='https://api-inference.huggingface.co/models/openai/whisper-tiny',
+                             filename=Path('../common_voice_en_34956476.mp3'))
