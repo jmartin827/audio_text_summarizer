@@ -20,7 +20,7 @@ There are some checks (postStart, readinessProbe, etc) within the K8 deployment 
 These instructions will help you get this project running on a local machine.
 
 --> For an actual deployment see kubernetes/ingress/README.md and skip local ingress
-deployment.
+deployment. (Use base deployment and deploy ingress resources)
 ### Prerequisites
 
 - [Python 3.10](https://www.python.org/downloads/)
@@ -41,6 +41,7 @@ deployment.
    cd audio_text_summarizer
    ```
 3. Kubernetes:
+   **Optional for local testing**
    ```bash
    minikube start
    ```
