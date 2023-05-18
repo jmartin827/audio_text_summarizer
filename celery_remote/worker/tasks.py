@@ -40,8 +40,6 @@ def process_file(audio_task_in: dict) -> str | None:  # TODO find better type hi
                   'transcription': transcription,
                   'status': 1}
 
-    logging.info(f'Resulted in {percent}% of original transcript')
-
     os.remove(file_path)
     logging.info(f'Cleaned up file {file_path}')
 

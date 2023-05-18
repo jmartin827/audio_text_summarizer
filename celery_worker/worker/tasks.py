@@ -19,7 +19,7 @@ def process_file(audio_task_in: dict) -> str | None:  # TODO find better type hi
     """Passes file UUID to transcription function and result to summarization function.
 
     """
-
+    # TODO output more data such as phrase-level timestamps
     file_state = audio_task_in
     logging.info(f'Received job info:{audio_task_in}')
 
@@ -48,8 +48,6 @@ def process_file(audio_task_in: dict) -> str | None:  # TODO find better type hi
     file_state = {**file_state, 'summary': summary,
                   'transcription': transcription,
                   'status': 1}
-
-    logging.info(f'Resulted in {percent}% of original transcript')
 
     os.remove(file_path)
     logging.info(f'Cleaned up file {file_path}')

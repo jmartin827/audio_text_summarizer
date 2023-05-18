@@ -12,15 +12,15 @@ app = FastAPI()
 app.include_router(router, prefix="/api")
 
 
-# @app.middleware("http")
-# async def log_requests(request: Request, call_next):
-#     """
-#     Log all incoming requests for debugging
-#     """
-#     headers = dict(request.headers)
-#     logging.debug(f"Request: {request.method} {request.url} Headers: {headers}")
-#     response = await call_next(request)
-#     return response
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """
+    Log all incoming requests for debugging
+    """
+    headers = dict(request.headers)
+    logging.debug(f"Request: {request.method} {request.url} Headers: {headers}")
+    response = await call_next(request)
+    return response
 
 # TODO get CORS working with the nginx proxy
 origins = [

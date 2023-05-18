@@ -43,20 +43,22 @@ async def process(request: Request, in_file: UploadFile = File(...), summary_rat
     # Track number of jobs per single IP address to throttle use
     # Attempts to locate x-original-forwarded-for header and if not default to FastAPI supplied.
 
+    # TODO resolve issue as it is not consistently getting actual visitor IP.
+    # Cloudflare adds a header--need to troubleshoot this issue.
     try:
-        logging.debug(f'Header during check: {request.headers}')
+        logging.info(f'Header during check: {request.headers}')
         client_host_ip = request.headers['x-original-forwarded-for']
     except (ValueError, KeyError):
         client_host_ip = str(request.client.host)
         logging.info(
-            f'Unable to locate x-original-forwarded-for header. Defaulting to request.client.host. '
-            f'Confirm IP address is accurate and changing header used to determine user IP.'
+            f'Unable to locate x-original-forwarded-for header. '
+            f'Defaulting to request.client.host: {request.client.host}\n'
+            f'Confirm IP address is accurate and changing header used to determine user IP:\n'
+            f'{request.headers}'
         )
         pass
 
     # Set Job UUID
-    # TODO limit upload size
-
     task_uuid = str(uuid.uuid1())
     check__limit_job_count(ip_address=client_host_ip, job_uuid=task_uuid, limit=4)
 

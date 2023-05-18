@@ -44,7 +44,7 @@ front_end_ingress.yaml: ReactJS front end for the domain root example.com
 
 back_end_ingress.yaml: Back end FastAPI Rest API for api.example.com
 
-back_end_ingressr_root.yaml: Identical to above but for example.com
+back_end_ingress_root.yaml: Identical to above but for example.com and is a CORS workaround
 ```bash
 kubectl apply -f front_end_ingress.yaml
 ```

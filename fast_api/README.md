@@ -1,6 +1,6 @@
 Uses FastAPI to create Celery tasks.
 
-Checks source user's IP VIA middleware to throttle to specified cocurrent jobs
+Checks source user's IP VIA middleware to throttle to specified concurrent jobs
 per user.
 
 Able to check job status based on UUID.

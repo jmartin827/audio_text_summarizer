@@ -111,6 +111,7 @@ def transcribe_audio(audio_file: Path) -> str:
     # text = result["text"]
 
     # TODO build docker image with model
+    # faster-whisper option:
     model = WhisperModel(model_size_or_path="tiny", compute_type='float32')
     segments, info = model.transcribe(str(audio_file), word_timestamps=True)
     text = ''.join([segment.text for segment in list(segments)])
@@ -136,5 +137,3 @@ def get_redis_client(db_num: int) -> redis.Redis:
     client.execute_command('SELECT', db_num)
 
     return client
-
-# transcribe_audio('../common_voice_en_34956476.mp3')

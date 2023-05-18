@@ -73,11 +73,11 @@ spec:
               mountPath: /input
           resources:
             limits:
-              cpu: "1.2"  # 2vCPU Digital Ocean cluster idles at 20%
-              memory: "1500Mi"
+              cpu: "1.4"  # 2vCPU Digital Ocean cluster idles at 20%
+              memory: "1700Mi"
             requests:
               cpu: "0.8"
-              memory: "1200Mi"
+              memory: "1300Mi"
       volumes:
         - name: shared-file-input-pv
           persistentVolumeClaim:

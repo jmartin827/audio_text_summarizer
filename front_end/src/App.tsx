@@ -3,9 +3,7 @@ import React, {useState} from 'react';
 import axios from 'axios';
 import './App.css';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import {Box, Button, Grid, Link, TextField, Typography} from '@mui/material';
-
-// TODO set base url using axios default method
+import {Box, Button, Grid, Link, styled, TextField, Typography} from '@mui/material';
 
 function Process() {
     const [file, setFile] = useState(null);
@@ -15,6 +13,11 @@ function Process() {
     const defaultStatus = 'Upload File To Continue';
     const [isUploading, setIsUploading] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+
+    const ScrollableBox = styled(Box)`
+      max-height: 400px;
+      overflow-y: auto;
+    `;
 
     axios.defaults.baseURL = process.env.REACT_APP_API_BASE;
 
@@ -103,7 +106,6 @@ function Process() {
                             style={{display: "none"}}
                             onChange={onFileChange}
                             disabled={isProcessing || isUploading}
-                            // disabled={!isProcessing && !isUploading}
                         />
                         <label htmlFor="contained-button-file">
                             <Button
@@ -130,7 +132,7 @@ function Process() {
                         >
                             {isProcessing ? 'Processing...' : 'Submit'}                        </Button>
                     </Grid>
-                    <Grid item xs={2}>
+                    <Grid item xs={1.3}>
                         <TextField
                             id="summary-ratio"
                             label="Summary Ratio"
@@ -159,7 +161,7 @@ function Process() {
 
                 <Grid container spacing={1} justifyContent="center">
                     <Grid item xs={10}>
-                        <Box height={400}>
+                        <ScrollableBox>
                             <Box>
                                 <Typography variant="h6" gutterBottom>
                                     Status:
@@ -169,12 +171,15 @@ function Process() {
                                     borderColor="primary.main"
                                     borderRadius={2}
                                     p={2}
-                                    sx={{whiteSpace: 'pre-wrap', overflowWrap: 'break-word', overflow: 'auto'}}
+                                    sx={{
+                                        whiteSpace: 'pre-wrap',
+                                        overflowWrap: 'break-word',
+                                    }}
                                 >
                                     {status ? status : defaultStatus}
                                 </Box>
                             </Box>
-                        </Box>
+                        </ScrollableBox>
                     </Grid>
                 </Grid>
 

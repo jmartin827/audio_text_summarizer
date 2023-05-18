@@ -165,4 +165,4 @@ def query_inference_endpoint(filename: Path, api_token: Optional[str] = None,
 if __name__ == '__main__':
     query_inference_endpoint(api_token='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',
                              api_url='https://api-inference.huggingface.co/models/openai/whisper-tiny',
-                             filename=Path('common_voice_en_34956476.mp3'))
+                             filename=Path('../common_voice_en_34956476.mp3'))
